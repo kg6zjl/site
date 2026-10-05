@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I let an AI agent manage my home cluster</title>
+<meta name="description" content="Three mini PCs, one Kubernetes cluster, an AI agent running inside it with read-only access and no secrets. Its only way to change anything is a pull request I review.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<nav class="topnav">
+  <ul>
+    <li><a href="index.html" aria-current="page">Why</a></li>
+    <li><a href="guardrails.html">Guardrails</a></li>
+    <li><a href="monitoring.html">Monitoring</a></li>
+    <li><a href="alerting.html">Alerting</a></li>
+    <li><a href="workflow.html">The loop</a></li>
+    <li><a href="stack.html">The stack</a></li>
+  </ul>
+</nav>
+
+<header class="page-head">
+  <p class="eyebrow">Home cluster</p>
+  <h1>I let an AI agent manage my cluster. The catch? It can't change anything without me.</h1>
+  <p class="lede">
+    Hermes runs as a pod in my home Kubernetes cluster. It has read-only RBAC, no access
+    to any secrets, and no way to modify itself - except via a PR. To
+    change anything at all it opens a pull request, and I review and merge it.
+  </p>
+  <p class="small">
+    Everything it does and everything the cluster notifies (alerts/notifications) arrives in a few Discord channels. The
+    guardrails, what it monitors, how it alerts, and what's still broken.
+  </p>
+</header>
+
+<main>
+
+<figure class="shot narrow">
+  <a class="zoom" href="assets/img/discord-bot.png">
+    <img src="assets/img/discord-bot.png" alt="Discord bot screenshot" width="1008" height="2008" loading="lazy">
+  </a>
+  <figcaption>
+    <strong>Hermes in action.</strong> The AI agent and human communicate through Discord channels.
+  </figcaption>
+</figure>
+
+<section aria-labelledby="why">
+  <h2 id="why">Why bother with this at all</h2>
+  <p>
+    Two versions of this are easy and neither one is useful. An agent that can only look at the
+    cluster is safe and pointless. An agent that can apply and delete is genuinely useful and one
+    bad guess away from a disaster I clean up by hand at 1am.
+  </p>
+  <p>
+    So I split reach from authority. It gets maximum reach for reading: every workload, log, event,
+    metric and Flux object. It gets zero authority to mutate. It can see the world, but the only way it
+    interacts with the cluster is a pull request that a human gates. The cluster is still its job to
+    fix, it just has to write the fix down and get it reviewed first.
+  </p>
+<p>
+    It's safe because the cluster is reconciled from git by Flux. Anything not in a merged commit
+    gets reverted on the next reconcile. A bad idea from the agent costs a rejected pull request,
+    not an outage.
+  </p>
+
+  <figure class="shot">
+    <a class="zoom" href="assets/img/loop.svg">
+      <img src="assets/img/loop.svg" alt="Flow diagram of the only write path. Three authors open a pull request on the same queue: me, Hermes and Renovate. Required checks run: a failure goes back to the pull request along a red arrow and a pass goes forward along a green one to a gate asking who merges, which only a human can pass. The merge goes to main, Flux reconciles, and the result is a new state. An amber dashed arrow returns from Flux to me when a reconcile fails and raises an alert, so the only way out is another pull request through the same gate." width="518" height="846" loading="lazy">
+    </a>
+    <figcaption>
+      <strong>The only write path.</strong> Including for me. No apply, no patch, no "just this once" —
+      because the moment there is, the rest of this stops being true.
+    </figcaption>
+  </figure>
+
+  <div class="note">
+    <span class="label">The part I didn't expect</span>
+    <p>
+      Reviewing every change is nowhere near the tax I thought it would be. It's the only reason I'm
+      comfortable pointing a model at my infrastructure, and it leaves a written record of every
+      change anything made, including me.
+    </p>
+  </div>
+</section>
+
+<section aria-labelledby="wins">
+  <h2 id="wins">What it has actually done</h2>
+  <p>
+    These are from the last while, and most of them are boring on purpose.
+  </p>
+  <ul>
+    <li>
+      <strong>Deleted alerts that could not fire.</strong> Several rules watched metrics that don't
+      exist or conditions that never hold. They looked like coverage. The agent measured each one
+      against real data before it shipped, and cut the ones that were decoration.
+    </li>
+    <li>
+      <strong>Cut a paging alert for a weekly event.</strong> A node reboot alert would have fired
+      every patch cycle for something I already expect. Reboots aren't incidents here. It removed the
+      rule and left the signal on a dashboard instead.
+    </li>
+    <li>
+      <strong>Turned on runtime detection, then tuned it.</strong> Image scanning sees what's inside
+      an image, admission sees intent. Neither sees what a process does after it starts. Falco is
+      live now, with a curated rule set rather than the whole upstream one.
+    </li>
+    <li>
+      <strong>Found the hole in its own allow-list.</strong> Three things in this cluster legitimately
+      talk to the API server. The obvious fix was to allow-list their image, except two of them run a
+      generic base image, and that would have exempted every container built on it. It matched them
+      on namespace and pod name instead, and wrote down why.
+    </li>
+    <li>
+      <strong>Killed an alert that fired every night for nothing.</strong> A maintenance job on the
+      host reads an ssh directory on a daily timer. The exemption it wrote is scoped to that process,
+      its parent, and the host — not to the path. Exempting the path would have exempted the attacker
+      too.
+    </li>
+    <li>
+      <strong>Stopped flagging real logins.</strong> A newer ssh daemon reads its key file as a
+      differently named process, which wasn't on the list of expected ssh binaries, so every login I
+      made looked like an intrusion. That name is on the list now, and any other process reading that
+      directory still alerts.
+    </li>
+    <li>
+      <strong>Turned two policies from reports into refusals.</strong> The policies guarding the
+      agent's own identity were reporting violations into an audit report nobody read. Now a
+      violation is refused, and the findings that are genuinely informational land in a security
+      channel instead of being lost.
+    </li>
+    <li>
+      <strong>Built the dashboard I actually wanted.</strong> The question was "why does this node
+      look unstable". Load average and iowait answered nothing. The dashboard shows pressure stall
+      metrics, per-disk latency <em>with</em> throughput, memory, and reboots. The answer turned out
+      to be one reboot, not a sick node.
+    </li>
+  </ul>
+</section>
+
+<section aria-labelledby="cost">
+  <h2 id="cost">What it costs</h2>
+  <p>
+    Every wake spends real money, and the number moves as the models do, so I am not going to
+    quote one here — it would be a measurement of a month that has already changed. What I can say
+    is where the money went and what I changed because of it.
+  </p>
+  <p>
+    Alert-driven wakes were the dominant cost at the start, by a wide margin. I turned that path
+    off, rebuilt it much narrower, then turned it back on: an hourly poll instead of a frequent
+    one, a short allow-list of alert names genuinely worth an unattended run, a dedupe gate so a
+    standing alert cannot wake it again every hour, and a hard ceiling on runs.
+  </p>
+  <div class="note">
+    <span class="label">The lesson, and the mistake I nearly made</span>
+    <p>
+      The fix was the intelligent filters, not disabling the feedback path entirely. The measurement that first stopped me was
+      the whole provider account's spend for a day, not this path — and the agent's share of it
+      was a fraction of that headline number. Read what a cost figure actually measures before
+      rebuilding anything because of it.
+    </p>
+  </div>
+</section>
+
+<section aria-labelledby="weak">
+  <h2 id="weak">What's weak right now</h2>
+  <p>
+    These are open today.
+  </p>
+  <ul>
+    <li>
+      <strong>One policy is fail-open on purpose.</strong> The guard that refuses pod exec, token
+      minting and Secret writes made as the agent doesn't run if Kyverno is down. Failing closed there
+      would block every Secret write in the cluster, so it's a trade: what it covers, its RBAC already
+      covers too.
+    </li>
+    <li>
+      <strong>Scan triage is behind the findings.</strong> The scanner works and the alerts are live.
+      The first sweep found dozens of running workloads carrying a fixable critical. Coverage isn't
+      the problem, working through it is.
+    </li>
+    <li>
+      <strong>The image registry is open inside the cluster.</strong> Any workload can pull any image
+      in it. Fine while everything there is a public base image or a build output. Not fine the day
+      that stops being true.
+    </li>
+  </ul>
+</section>
+
+<section aria-labelledby="next">
+  <h2 id="next">Read on</h2>
+  <p>
+    <a href="guardrails.html">Guardrails</a> is the leash: permissions, secrets, networking, and the
+    policies that stop the agent widening its own rights. <a href="monitoring.html">Monitoring</a> is
+    what's measured, and why that list is short. <a href="alerting.html">Alerting</a> is the pipeline
+    and the decisions that keep it quiet enough to trust. <a href="workflow.html">The loop</a> is how
+    a change actually gets in. <a href="stack.html">The stack</a> is every tool, and why that one.
+  </p>
+</section>
+
+<section aria-labelledby="quotes">
+  <h2 id="quotes">What others said</h2>
+  <blockquote>
+    <p>This is a serious, adult implementation of constrained AI ops. The author understood the failure modes most people hand-wave past (agent that can apply/delete, prompt that can be talked out of rules, accidental privilege expansion, alert fatigue, silent cost). The documentation is better than most commercial "platform" write-ups.
+    <br><br>
+    It is not revolutionary — GitOps + least privilege + human gate is the correct pattern — but it is executed with unusual care and honesty about what still sucks. Worth reading if you are thinking about putting any agent near real infrastructure.</p>
+    <footer>— Grok</footer>
+  </blockquote>
+  <blockquote>
+    <p>This repository and documentation site provide an exceptional, pragmatic masterclass in GitOps and AI safety by decoupling operational reach from mutation authority. By restricting the cluster's AI agent to read-only visibility while forcing all system changes through human-reviewed pull requests, it achieves a remarkably disciplined balance between automated observability and deterministic infrastructure control.</p>
+    <footer>— Gemini</footer>
+  </blockquote>
+  <blockquote>
+    <p>An unusually transparent homelab project that treats AI-assisted infrastructure management as an engineering problem rather than a magic trick, with strong GitOps guardrails and a clear audit trail. The combination of Flux, automated validation, security controls, monitoring, and a human-reviewed PR-only write path makes the repo genuinely interesting beyond the Kubernetes hobbyist crowd.</p>
+    <footer>— ChatGPT</footer>
+  </blockquote>
+  <blockquote>
+    <p>A refreshingly honest write-up of a sensible AI-agent setup: broad read access, zero write authority, and every change routed through a Flux-reconciled pull request. The 'what's weak right now' section and the lessons on alert noise and cost filtering show real operational maturity. The repo (1,100+ commits of Flux and MicroK8s manifests) backs it up as a living system rather than a weekend demo.</p>
+    <footer>— Claude</footer>
+  </blockquote>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Notes from a GitOps home cluster. Source is the <code>site/</code> directory of the cluster repository. <a href="guardrails.html">Guardrails →</a></p>
+  </div>
+</footer>
+
+<dialog class="lightbox" id="lightbox" aria-label="Screenshot, full size">
+  <img alt="">
+  <button class="lightbox-close" type="button">Close</button>
+</dialog>
+
+<script src="assets/lightbox.js" defer></script>
+</body>
+</html>
