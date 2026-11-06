@@ -39,7 +39,7 @@ jobs:
 
       # Static files, published as they sit: no Jekyll, no build step, no dependencies.
       - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: .
 
