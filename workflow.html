@@ -100,13 +100,15 @@
     change is <em>correct</em>. That is the review.
   </p>
   <div class="cards">
-    <div class="card"><h3>Lint</h3><p>Malformed YAML caught before Flux tries to apply it. The Prometheus rules and Alertmanager routes are parsed by their own check, because a config rejected on reload stops every notification in the cluster.</p></div>
+    <div class="card"><h3>Lint</h3><p>Malformed YAML caught before Flux tries to apply it.</p></div>
     <div class="card"><h3>Validate</h3><p>Builds every Flux root with Kustomize, discovered from the sync files so new components are covered automatically.</p></div>
     <div class="card"><h3>Secret Scan</h3><p>TruffleHog over the PR's commits rather than its tip, so a credential added and deleted in the same branch still fails.</p></div>
   </div>
   <p class="small">
-    Nothing validates against the live API. A Kustomize build proves the tree assembles, not that the
-    cluster will accept it, so a rejected field only shows up when Flux reconciles.
+    The alerting rules and routes are parsed by a separate check before merge, because a config
+    rejected on reload stops every notification in the cluster. None of it validates against the live
+    API: a Kustomize build proves the tree assembles, not that the cluster will accept it, so a
+    rejected field only shows up when Flux reconciles.
   </p>
 </section>
 

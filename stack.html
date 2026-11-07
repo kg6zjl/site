@@ -36,7 +36,7 @@
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
     <tbody>
-      <tr><td>MicroK8s</td><td>Installed from a snap, so the cluster and its upgrades are one mechanism, and a node that goes bad is rebuilt from a playbook rather than repaired by hand.</td></tr>
+      <tr><td>MicroK8s</td><td>Installed from a snap, so upgrading Kubernetes is a snap refresh rather than a distro migration, and a bad node is re-imaged by the same playbook that built it.</td></tr>
       <tr><td>Flux CD</td><td>The only thing that writes to the cluster. Continuous reconcile means anything not in a merged commit gets reverted, which is what makes "the agent can try things" a bounded risk.</td></tr>
       <tr><td>Flux Operator</td><td>Declares the Flux install as an object in git, so there's no hand-run bootstrap nobody can reproduce.</td></tr>
       <tr><td>Dex</td><td>SSO for humans, not workloads. The API server trusts it as an OIDC issuer, so access is a token with an expiry rather than a cert copied between machines.</td></tr>
@@ -106,16 +106,16 @@
     <li><strong>The distribution was a lateral move.</strong> Off one Kubernetes distro and onto another: days of work, nothing bought.</li>
     <li><strong>The registry is open inside the cluster.</strong> It was the fast choice and I have not had to pay for it yet. The day a private image lands in it, I will.</li>
   </ul>
-  <p class="small">
-    The agent cannot be useful without a human. That is the design rather than a dead end, but it
-    does mean every fix waits for me.
-  </p>
   <div class="note">
     <span class="label">The test I apply to any addition</span>
     <p>
       If a component cannot be justified by a question I have actually asked, it does not go in.
       That is a slow way to build. It is also why every component on this page still has a reason I
       can say out loud.
+    </p>
+    <p>
+      The agent cannot be useful without a human. That is the design rather than a dead end, but it
+      does mean every fix waits for me.
     </p>
   </div>
 </section>
