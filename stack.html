@@ -72,6 +72,24 @@
     </tbody>
   </table>
 
+  <h3>Images</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Spegel</td>
+        <td>A registry mirror made out of the cluster itself. Every node runs one and they hand image
+          layers to each other, so a layer one machine has already pulled is served from a peer
+          instead of being fetched from the internet again — on four nodes, the difference between
+          getting an image once and getting it four times. It writes itself into each node's
+          containerd config, so no workload knows it is there, and it mirrors six upstream
+          registries plus my own. One rule in its NetworkPolicy deliberately has no source:
+          containerd reaches the mirror over a host port, and host traffic cannot match a pod
+          selector. Pinned to the 0.7 line because 0.8 wants containerd 2.2 and MicroK8s ships 2.1.6.</td>
+      </tr>
+    </tbody>
+  </table>
+
   <h3>Getting traffic in, and certificates out</h3>
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
@@ -259,7 +277,7 @@
 
   <p class="small">
     Also present, and unremarkable enough to skip a row: metrics-server for autoscaling, an SMB
-    CSI driver for the NAS, a registry mirror, and a container registry of my own.
+    CSI driver for the NAS, and a container registry of my own.
   </p>
 </section>
 
