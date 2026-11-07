@@ -1,0 +1,9 @@
+{
+  // Workers Builds deploys whatever `assets.directory` points at. The site has no build step and
+  // no dependencies, so the asset directory is the repository root.
+  "name": "k8s-site",
+  "compatibility_date": "2026-11-07",
+  "assets": {
+    "directory": "."
+  }
+}
