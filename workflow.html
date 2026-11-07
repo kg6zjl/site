@@ -96,17 +96,21 @@
 <section aria-labelledby="ci">
   <h2 id="ci">What CI proves, and what it doesn't</h2>
   <p>
-    Three required checks gate the merge. All three are content gates, and none of them proves the
-    change is <em>correct</em>. That is the review.
+    Eight contexts gate the merge, from two workflows. CI Lint runs Lint, Validate, Secret Scan and
+    the Kyverno policy tests. Upgrade sanity runs Manifests, Charts, Chart bump diff and Image
+    bumps. All eight are content gates, and not one of them proves the change is <em>correct</em>.
+    That is the review.
   </p>
   <div class="cards">
-    <div class="card"><h3>Lint</h3><p>Malformed YAML caught before Flux tries to apply it.</p></div>
-    <div class="card"><h3>Validate</h3><p>Builds every Flux root with Kustomize, discovered from the sync files so new components are covered automatically.</p></div>
+    <div class="card"><h3>Lint and Validate</h3><p>Malformed YAML caught before Flux tries to apply it, and every Flux root built with Kustomize — discovered from the sync files, so a new component is covered the moment its sync object lands.</p></div>
     <div class="card"><h3>Secret Scan</h3><p>TruffleHog over the PR's commits rather than its tip, so a credential added and deleted in the same branch still fails.</p></div>
+    <div class="card"><h3>Upgrade sanity</h3><p>Renders the changed charts, validates manifests against their schemas, diffs a chart bump, and resolves every image tag against the registry.</p></div>
   </div>
   <p class="small">
-    None of it validates against the live API. A Kustomize build proves the tree assembles, not that
-    the cluster will accept it, so a rejected field only shows up when Flux reconciles.
+    None of the eight is path-filtered, and that is load-bearing: a required check with a path filter
+    never reports on a pull request that misses those paths, and GitHub then waits for it forever.
+    Nothing validates against the live API either. A Kustomize build proves the tree assembles, not
+    that the cluster will accept it, so a rejected field only shows up when Flux reconciles.
   </p>
 </section>
 
