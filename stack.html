@@ -217,21 +217,25 @@
       </tr>
       <tr>
         <td>Renovate</td>
-        <td>Opens a pull request when a newer version exists, hourly, one version at a time. It
-          proposes and never merges, so an update becomes a reviewed change like any other. See
-          <a href="workflow.html">The loop</a>.</td>
+        <td>Opens a pull request when a newer version exists, hourly, one version at a time. Small
+          safe bumps — patch, digest, pin — it merges itself, through its own App bypass rather
+          than GitHub's platform auto-merge, because that still wants a human review. A minor, and
+          the control-plane pieces, wait for me. See <a href="workflow.html">The loop</a>.</td>
       </tr>
       <tr>
         <td>Crossplane</td>
-        <td>Manages the GitHub webhook as a Kubernetes object. This exists because the webhook URL
-          used to live in a repository secret that a human had copied by hand and nothing could
-          rotate — a credential with no lifecycle. See <a href="alerting.html">Alerting</a>.</td>
+        <td>Manages the repository rulesets and the GitHub webhook as Kubernetes objects. The merge
+          gate on three repositories is a file here rather than a settings screen somebody clicked,
+          which is the only reason it has a diff and a history. The webhook is here for the same
+          reason the rulesets are: its URL used to live in a repository secret a human had copied
+          by hand and nothing could rotate. See <a href="alerting.html">Alerting</a>.</td>
       </tr>
       <tr>
         <td>Discord, with ntfy for criticals</td>
         <td>The whole human interface. Channels rather than one feed, because a policy finding and
-          a paging incident are different kinds of message and should not share a thread. Every
-          producer holds one channel webhook and nothing else.</td>
+          a paging incident are different kinds of message and should not share a thread. Everything
+          that posts in holds a single channel webhook — except the agent, which holds a bot token
+          scoped to the channels it was granted.</td>
       </tr>
     </tbody>
   </table>
@@ -264,9 +268,6 @@
     <li><strong>The distribution was a lateral move.</strong> I moved off one Kubernetes
       distribution and onto another, which cost days and bought nothing. Pick a distribution on its
       merits once.</li>
-    <li><strong>Two things here do one job between them.</strong> The cluster grew faster than the
-      questions it was being asked, and that shows up as components whose only justification is
-      that they were easy to add.</li>
     <li><strong>The agent has no way to be useful without a human.</strong> That is the design,
       not a limitation I have run out of road on, but it does mean every fix waits for me.</li>
   </ul>

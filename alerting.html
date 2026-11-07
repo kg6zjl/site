@@ -96,7 +96,7 @@
   <div class="note">
     <span class="label">Why a webhook is a good credential here</span>
     <p>
-      Everything posting in holds one channel webhook and nothing else. A webhook can add a message
+      Everything that posts in holds one channel webhook and nothing else, the agent aside. A webhook can add a message
       to the one channel it was created in: it cannot read history, cannot react, cannot join another
       channel, and no API client anywhere holds it. There is one consequence worth knowing — a
       channel webhook is permanently bound to its channel, so the security channel's webhook cannot be
@@ -105,12 +105,14 @@
     </p>
   </div>
   <p class="small">
-    The agent's way out is the opposite shape: one Discord App token, minted and re-minted hourly by a
-    sidecar the model's own container never holds. It can post, and that is very nearly all it can do.
-    The agent is <em>told</em> to reply in channel, and told never to merge. A rule the model can be
-    argued out of is not a control — which is why the credential matters as much as the prompt: this
-    one can post, and nothing else. It is not what stops a merge, though. The branch rules are, and
-    those are covered under <a href="workflow.html#unattended">the loop</a>.
+    The agent's way out is a different shape: a Discord bot token, delivered from the vault into the
+    container as an environment variable and scoped to the channels it was granted. It is not the
+    hourly-minted credential the GitHub side uses — that one is a GitHub App installation token, and
+    the sidecar that re-mints it is a separate mechanism. The agent is <em>told</em> to reply in
+    channel, and told never to merge. A rule the model can be argued out of is not a control, which is
+    why the credential matters as much as the prompt: this one can post, and very little else. It is
+    not what stops a merge, though. The branch rules are, and those are covered under
+    <a href="workflow.html#unattended">the loop</a>.
   </p>
 </section>
 
