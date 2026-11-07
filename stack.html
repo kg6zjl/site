@@ -224,10 +224,11 @@
       </tr>
       <tr>
         <td>Crossplane</td>
-        <td>Manages the repository rulesets and the GitHub webhook as Kubernetes objects. The merge
-          gate on three repositories is a file here rather than a settings screen somebody clicked,
-          which is the only reason it has a diff and a history. The webhook is here for the same
-          reason the rulesets are: its URL used to live in a repository secret a human had copied
+        <td>Manages the repository rulesets and the GitHub webhook as Kubernetes objects, and Flux
+          reconciles them like anything else in the cluster. That last part is the point: the merge
+          gate on three repositories is a file here with a diff and a history, and a setting changed
+          by hand in GitHub's UI is put back on the next reconcile. The webhook is here for the same
+          reason the rulesets are — its URL used to live in a repository secret a human had copied
           by hand and nothing could rotate. See <a href="alerting.html">Alerting</a>.</td>
       </tr>
       <tr>
