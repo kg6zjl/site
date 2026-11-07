@@ -284,15 +284,17 @@
 <section aria-labelledby="swap">
   <h2 id="swap">What I would do differently</h2>
   <ul>
+    <li><strong>I delivered with Helmfile first.</strong> It renders a set of Helm releases and
+      applies them, which is fine while a person is the one running it. What it does not do is
+      converge when nobody is: a failed apply, or a hand edit, stays that way until someone notices.
+      Flux replaced it, and the difference is not a better tool for the same job — the apply step
+      left the workflow entirely, because the cluster now reconciles itself. The stale references to
+      Helmfile still scattered through the repository notes are proof that a migration does not
+      finish when the manifests move.</li>
     <li><strong>The distribution was a lateral move.</strong> I moved off one Kubernetes
       distribution and onto another, which cost days and bought nothing. Pick a distribution on its
       merits once.</li>
   </ul>
-  <p>
-    The list is short because most of what looks like a limitation here is the design. The obvious
-    one is the gate: the agent cannot merge, so every fix waits for me. That is not a road I ran out
-    of, it is the thing that makes the rest of this safe, and I would not change it.
-  </p>
   <div class="note">
     <span class="label">The test I apply to any addition</span>
     <p>
