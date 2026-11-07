@@ -1,7 +1,10 @@
 {
   // Workers Builds deploys whatever `assets.directory` points at. The site has no build step and
   // no dependencies, so the asset directory is the repository root.
-  "name": "k8s-site",
+  // The name must match the Worker that already exists. The first build ran before this config
+  // was here, so Wrangler auto-generated one and named the Worker 'site'. A different name
+  // deploys a second, separate Worker and leaves the live one serving stale assets.
+  "name": "site",
   "compatibility_date": "2026-11-07",
   "assets": {
     "directory": "."
