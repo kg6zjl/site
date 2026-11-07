@@ -54,9 +54,8 @@
 <section aria-labelledby="channels">
   <h2 id="channels">Where everything actually shows up</h2>
   <p>
-    Discord is the entire human interface for this cluster. Not a dashboard I check — I would not
-    check it. Channels, each with a single job, so that a policy finding and a paging incident are
-    not sitting in the same thread arguing about what they mean.
+    Discord is the entire human interface for this cluster. Channels, each with a single job, so that a policy finding and a paging incident are
+    not sitting in the same thread causing noise.
   </p>
 
   <figure class="shot">
@@ -87,8 +86,7 @@
     Three of the four channels are backed by a webhook each, and a webhook is bound to the channel
     it was created in. That is why two producers sharing a channel have to share a webhook — Flux
     posts through Alertmanager's, and CI through the same one the GitHub webhook uses — and why the
-    lines above converge in pairs. Fewer credentials to hold is the point. The cost is that losing
-    one webhook silences one channel carrying two producers' output, not one producer's. Hermes is
+    lines above converge in pairs. Fewer credentials to hold is the point. Hermes is
     the exception: it holds an app token rather than a channel webhook, so it is scoped to the
     channels it was granted instead of being confined to one.
   </p>
@@ -96,21 +94,18 @@
   <div class="note">
     <span class="label">Why a webhook is a good credential here</span>
     <p>
-      Everything posting in holds one channel webhook and nothing else. A webhook can add a message
+      A webhook can add a message
       to the one channel it was created in: it cannot read history, cannot react, cannot join another
-      channel, and no API client anywhere holds it. There is one consequence worth knowing — a
-      channel webhook is permanently bound to its channel, so the security channel's webhook cannot be
-      swapped for the alerts channel's URL. That separation is a property of the credential, not a
-      routing rule somebody has to remember to maintain.
+      channel, and no API client anywhere holds it.
     </p>
   </div>
   <p class="small">
-    The agent's way out is the opposite shape: one Discord App token, minted and re-minted hourly by a
-    sidecar the model's own container never holds. It can post, and that is very nearly all it can do.
-    The agent is <em>told</em> to reply in channel, and told never to merge. A rule the model can be
-    argued out of is not a control — which is why the credential matters as much as the prompt: this
-    one can post, and nothing else. It is not what stops a merge, though. The branch rules are, and
-    those are covered under <a href="workflow.html#unattended">the loop</a>.
+    The agent's way out is a different shape: a Discord bot token, delivered from the vault into the
+    container as an environment variable and scoped to the channels it was granted. The agent is <em>told</em> to reply in
+    channel, and told never to merge. A rule the model can be argued out of is not a control, which is
+    why the credential matters as much as the prompt: this one can post, and very little else. It is
+    not what stops a merge, though. The branch rules are, and those are covered under
+    <a href="workflow.html#unattended">the loop</a>.
   </p>
 </section>
 
@@ -125,7 +120,7 @@
   </p>
   <p>
     If everything pages, nothing does. That is the whole discipline, and it is much easier to state
-    than to hold: every alert added here has to be one I would rather stop reading than miss.
+    than to hold: every alert added here has to be one I would rather stop to read than miss.
   </p>
 </section>
 

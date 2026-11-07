@@ -72,6 +72,24 @@
     </tbody>
   </table>
 
+  <h3>Images</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Spegel</td>
+        <td>A registry mirror made out of the cluster itself. Every node runs one and they hand image
+          layers to each other, so a layer one machine has already pulled is served from a peer
+          instead of being fetched from the internet again — on four nodes, the difference between
+          getting an image once and getting it four times. It writes itself into each node's
+          containerd config, so no workload knows it is there, and it mirrors six upstream
+          registries plus my own. One rule in its NetworkPolicy deliberately has no source:
+          containerd reaches the mirror over a host port, and host traffic cannot match a pod
+          selector. Pinned to the 0.7 line because 0.8 wants containerd 2.2 and MicroK8s ships 2.1.6.</td>
+      </tr>
+    </tbody>
+  </table>
+
   <h3>Getting traffic in, and certificates out</h3>
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
@@ -217,21 +235,26 @@
       </tr>
       <tr>
         <td>Renovate</td>
-        <td>Opens a pull request when a newer version exists, hourly, one version at a time. It
-          proposes and never merges, so an update becomes a reviewed change like any other. See
-          <a href="workflow.html">The loop</a>.</td>
+        <td>Opens a pull request when a newer version exists, hourly, one version at a time. Small
+          safe bumps — patch, digest, pin — it merges itself, through its own App bypass rather
+          than GitHub's platform auto-merge, because that still wants a human review. A minor, and
+          the control-plane pieces, wait for me. See <a href="workflow.html">The loop</a>.</td>
       </tr>
       <tr>
         <td>Crossplane</td>
-        <td>Manages the GitHub webhook as a Kubernetes object. This exists because the webhook URL
-          used to live in a repository secret that a human had copied by hand and nothing could
-          rotate — a credential with no lifecycle. See <a href="alerting.html">Alerting</a>.</td>
+        <td>Manages the repository rulesets and the GitHub webhook as Kubernetes objects, and Flux
+          reconciles them like anything else in the cluster. That last part is the point: the merge
+          gate on three repositories is a file here with a diff and a history, and a setting changed
+          by hand in GitHub's UI is put back on the next reconcile. The webhook is here for the same
+          reason the rulesets are — its URL used to live in a repository secret a human had copied
+          by hand and nothing could rotate. See <a href="alerting.html">Alerting</a>.</td>
       </tr>
       <tr>
         <td>Discord, with ntfy for criticals</td>
         <td>The whole human interface. Channels rather than one feed, because a policy finding and
-          a paging incident are different kinds of message and should not share a thread. Every
-          producer holds one channel webhook and nothing else.</td>
+          a paging incident are different kinds of message and should not share a thread. Everything
+          that posts in holds a single channel webhook — except the agent, which holds a bot token
+          scoped to the channels it was granted.</td>
       </tr>
     </tbody>
   </table>
@@ -254,26 +277,32 @@
 
   <p class="small">
     Also present, and unremarkable enough to skip a row: metrics-server for autoscaling, an SMB
-    CSI driver for the NAS, a registry mirror, and a container registry of my own.
+    CSI driver for the NAS, and a container registry of my own.
   </p>
 </section>
 
 <section aria-labelledby="swap">
   <h2 id="swap">What I would do differently</h2>
   <ul>
+    <li><strong>I delivered with Helmfile first.</strong> It renders a set of Helm releases and
+      applies them, which is fine while a person is the one running it. What it does not do is
+      converge when nobody is: a failed apply, or a hand edit, stays that way until someone notices.
+      Flux replaced it, and the difference is not a better tool for the same job — the apply step
+      left the workflow entirely, because the cluster now reconciles itself. The stale references to
+      Helmfile still scattered through the repository notes are proof that a migration does not
+      finish when the manifests move.</li>
+    <li><strong>I would have bought more GPU.</strong> 
+I tried running
+      the agent locally first on my 16GB card and ended up on a hosted model, which is a decision a bigger card
+      could have avoided.</li>
     <li><strong>The distribution was a lateral move.</strong> I moved off one Kubernetes
       distribution and onto another, which cost days and bought nothing. Pick a distribution on its
       merits once.</li>
-    <li><strong>Two things here do one job between them.</strong> The cluster grew faster than the
-      questions it was being asked, and that shows up as components whose only justification is
-      that they were easy to add.</li>
-    <li><strong>The agent has no way to be useful without a human.</strong> That is the design,
-      not a limitation I have run out of road on, but it does mean every fix waits for me.</li>
   </ul>
   <div class="note">
     <span class="label">The test I apply to any addition</span>
     <p>
-      If a component cannot be justified by a question I have actually asked, it does not go in.
+      If a component cannot be justified by a question I have actually asked, it does not get deployed.
       That is a slow way to build and it means the list stays short enough to still be read.
     </p>
   </div>

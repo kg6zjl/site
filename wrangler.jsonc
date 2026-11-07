@@ -8,5 +8,9 @@
   "compatibility_date": "2026-11-07",
   "assets": {
     "directory": "."
-  }
+  },
+  // Required for `wrangler preview`, which is what Workers Builds runs on a pull request branch.
+  // It can be empty: assets, compatibility settings and placement stay at the top level. Without
+  // it the preview build fails outright and no Preview URL is ever posted to the pull request.
+  "previews": {}
 }

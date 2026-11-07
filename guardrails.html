@@ -127,8 +127,10 @@
 
   <h3>What the reviewer is checking</h3>
   <p>
-    The CI workflow has five jobs. Three are required checks, so a pull request cannot merge until
-    all three are green. Two more run and report but aren't required, for different reasons.
+    Eight contexts are required, from two workflows. CI Lint supplies Lint, Validate, Secret Scan
+    and the Kyverno policy tests; Upgrade sanity supplies Manifests, Charts, Chart bump diff and
+    Image bumps. A pull request cannot merge until all eight are green. The one job that reports
+    without gating anything is Notify failure, which has nothing to say on a green run.
   </p>
   <ul>
     <li>
@@ -136,7 +138,7 @@
       Flux tries to apply it and the reconcile fails visibly.
     </li>
     <li>
-      <strong>Validate</strong> — builds every root Flux reconciles with Kustomize, all forty of them,
+      <strong>Validate</strong> — builds every root Flux reconciles with Kustomize,
       read from the sync files rather than a hardcoded list so a new component is covered as soon as
       its sync object lands. It also builds the cluster directory itself, which is mostly Flux's own
       bootstrap, and checks that the registry's config is strict JSON, which Kustomize cannot see
@@ -150,8 +152,13 @@
       <code>AGENTS.md</code>'s instruction to grep before committing worth anything.
     </li>
     <li>
-      <strong>Kyverno policy tests</strong> — the admission policies' own fixtures. It runs and it
-      reports, but it is not a required check.
+      <strong>Kyverno policy tests</strong> — the admission policies' own fixtures, so a policy
+      that would refuse a legitimate manifest is caught before it can block the cluster.
+    </li>
+    <li>
+      <strong>Manifests, Charts, Chart bump diff, Image bumps</strong> — the four Upgrade sanity
+      jobs. Manifests are validated against their schemas, changed charts are rendered and linted,
+      a chart bump is diffed, and every image tag is resolved against the registry.
     </li>
     <li>
       <strong>Notify failure</strong> — deliberately skipped unless something failed, which is why it
@@ -159,8 +166,8 @@
     </li>
   </ul>
   <p>
-    The three required checks are all content gates. They verify that what is in the pull request is
-    well-formed and free of credentials the scanner can verify. None of them verifies that it's
+    The required checks are all content gates. They verify that what is in the pull request is
+    well-formed, schema-valid and free of credentials the scanner can verify. None of them verifies that it's
     <em>correct</em> — that is the review, and the review is the part that isn't automatable.
   </p>
   <p>
@@ -445,12 +452,14 @@
   <p>
     Nothing in the cluster floats on <code>latest</code>. Chart versions, image tags, GitHub Action
     versions and the CLI tools the pipeline pins are all pinned in the repository, and Renovate checks
-    hourly for newer ones and opens a single pull request when it finds one.
+    hourly for newer ones and opens a pull request when it finds one.
   </p>
   <p>
-    So a version changes the way everything else changes: a reviewed merge, with the checks run against
-    the new version first. A pin nobody merges stays pinned, so Renovate's pull requests are a to-do
-    list that can rot. That's the price of nothing silently upgrading itself underneath me.
+    Patch, digest and pin bumps Renovate merges itself, through its own App bypass rather than
+    GitHub's platform auto-merge, which still wants a human review. A minor, and the control-plane
+    pieces — Flux, Longhorn, the media chart — wait for me. So a version still changes the way
+    everything else changes: the checks run against the new version first, and the things that can
+    bite arrive as a to-do list rather than as a surprise.
   </p>
   <div class="note">
     <span class="label">Why Renovate and not dependabot</span>
