@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The loop: a pull request is the only write path</title>
-<meta name="description" content="How a change reaches a GitOps cluster: branch, commit, required checks on runner pods in the same cluster, human merge, Flux reconcile. Plus Renovate proposing version bumps and an agent that may never merge its own infrastructure changes.">
+<meta name="description" content="How a change reaches a GitOps cluster: branch, required checks on runner pods inside the same cluster, human merge, Flux reconcile. Plus why the agent may never merge its own infrastructure changes.">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -23,141 +23,120 @@
   <p class="eyebrow">The loop</p>
   <h1>A pull request is the only way anything changes</h1>
   <p class="lede">
-    Including for me. There's no apply, no patch, no "just this once" — because the moment there is,
-    the rest of this stops being true.
+    Including for me. There is no apply, no patch and no exception, because one exception turns the
+    rest of this from a system I run into a story I tell about myself.
   </p>
 </header>
 
 <main>
 
-<section aria-labelledby="loop">
-  <h2 id="loop">The loop</h2>
-
-  <figure class="shot">
-    <a class="zoom" href="assets/img/loop.svg">
-      <img src="assets/img/loop.svg" alt="Flow diagram of the only write path. Three authors open a pull request on the same queue: me, Hermes and Renovate. Required checks run: a failure goes back to the pull request along a red arrow and a pass goes forward along a green one to a gate asking who merges, which only a human can pass. The merge goes to main, Flux reconciles, and the result is a new state. An amber dashed arrow returns from Flux to me when a reconcile fails and raises an alert, so the only way out is another pull request through the same gate." width="518" height="846" loading="lazy">
-    </a>
-    <figcaption>
-      <strong>The whole loop.</strong> The dashed path is the design: the agent's pull request lands in
-      the same queue as mine, so "it wrote the fix" and "a human approved the fix" stay two separate
-      events.
-    </figcaption>
-  </figure>
-
-  <p>
-    Flux watches the repository, renders the manifests and applies them. Each top-level path is one
-    reconciliation unit with its own interval and health checks. Failure is alerted on the outcome —
-    still not ready after fifteen minutes — rather than on every attempt, because a controller that
-    retries is working, not broken.
-  </p>
-  <p>
-    The runners that test the repository are pods in the cluster the repository describes, spawned by
-    the Actions Runner Controller and discarded after the job. A bad change can break the thing that
-    validates the next change. The pipeline is tested against reality, not a hosted runner with
-    different network rules than production.
-  </p>
-</section>
-
 <section aria-labelledby="split">
   <h2 id="split">Who may merge what</h2>
   <p>
     The agent can open pull requests anywhere it has access. It may merge its <em>own</em> skills
-    repository, because that's its own knowledge and reviewing every line of my own notes would grind
-    the loop to a halt. It may not merge the cluster repository. That's mine.
+    repository, because that is its knowledge and reviewing every line of notes would stall the
+    loop. It may not merge the cluster repository.
   </p>
   <p>
-    It's also not my account doing the pushing. Its identity is its own app installation, so the author
-    and the reviewer are genuinely different identities, and the commit history says which one did
-    what. Before that change, "the agent opened this" and "I opened this" were indistinguishable.
+    It also isn't my account pushing. Its identity is its own app installation, so author and
+    reviewer are different actors and the history says which did what.
   </p>
   <div class="note">
     <span class="label">Why the split matters more than the tooling</span>
     <p>
-      An agent that can merge its own infrastructure changes is an agent that can authorise its own
-      widening. The one thing it must never be able to do is approve the change that gives it more
-      room. That's why the admission policies on its identity exist as well as the merge rule: two
-      independent ways of saying no.
+      An agent that can merge its own infrastructure changes can authorise its own widening. The one
+      thing it must never do is approve the change that gives it more room. That is why the admission
+      policies exist alongside the merge rule: two independent ways to say no.
     </p>
   </div>
+</section>
 
+<section aria-labelledby="loop">
+  <h2 id="loop">The loop</h2>
   <figure class="shot">
-    <div class="shot-pending" role="img" aria-label="Screenshot pending: a pull request opened by the agent, showing the app identity as the author and the required checks passing.">
-      <span class="todo">Screenshot pending</span>
-      <code class="path">assets/img/shots/agent-pr.png</code>
-      <span class="hint">A pull request opened by the agent. The thing to capture is the
-        <em>author</em> — it shows the app identity, not your account — plus the checks going green
-        and the merge button being yours.</span>
-    </div>
+    <a class="zoom" href="assets/img/loop.svg">
+      <img src="assets/img/loop.svg" alt="Three authors open pull requests on one queue; required checks pass or fail; only a human merges; Flux reconciles; a failed reconcile alerts back to a human." width="518" height="846" loading="lazy">
+    </a>
     <figcaption>
-      <strong>The agent's pull request.</strong> A different identity from the reviewer. That single
-      detail is what makes the commit history evidence rather than a story.
+      <strong>The whole loop.</strong> The agent's pull request lands in the same queue as mine.
     </figcaption>
+  </figure>
+  <p>
+    Flux watches the repository, renders the manifests and applies them. Each top-level path is one
+    reconciliation unit with its own interval and health checks.
+  </p>
+  <p>
+    The queue is never empty. Nothing floats on <code>latest</code>, the charts, images and actions
+    are pinned, and Renovate opens one pull request per version bump. That is the point of the loop:
+    most changes are routine, which is what makes an unusual one visible.
+  </p>
+  <p>
+    The runners that test the repository are pods in the cluster the repository describes, spawned by
+    the Actions Runner Controller and discarded after the job. A bad change can break the thing that
+    validates the next change, which is the honest version of testing.
+  </p>
+</section>
+
+<section aria-labelledby="hosts">
+  <h2 id="hosts">The other applier</h2>
+  <p>
+    Flux is not the only thing that applies a merged diff. Host configuration is Ansible in the same
+    repository, so a machine is rebuilt from a commit rather than repaired by hand. Secrets resolve
+    from the vault at run time. Security updates install unattended and reboot on a staggered
+    timetable, one host at a time, ordered so quorum never drops.
+  </p>
+  <figure class="shot">
+    <a class="zoom" href="assets/img/patching.svg">
+      <img src="assets/img/patching.svg" alt="Three change sources feeding one pull request merged by a human, then branching to Flux for cluster changes and Ansible for host changes." width="836" height="465" loading="lazy">
+    </a>
+    <figcaption><strong>Three ways in, one gate, two appliers.</strong> The merged diff decides: Flux for the cluster, Ansible for the machines.</figcaption>
   </figure>
 </section>
 
-<section aria-labelledby="unattended">
-  <h2 id="unattended">The unattended version of the loop</h2>
+<section aria-labelledby="ci">
+  <h2 id="ci">What CI proves, and what it doesn't</h2>
   <p>
-    When an alert wakes it, the loop is: read the alert, look at the resources and logs involved,
-    answer in the notification channel, and — if a manifest change is the fix — open a pull request and
-    stop. It runs with exactly the same access as any other session, so the worst an unattended run can
-    do is investigate and talk. The merge waits for the human who was asleep.
+    Three required checks gate the merge. All three are content gates, and none of them proves the
+    change is <em>correct</em>. That is the review.
   </p>
-  <p>
-    The prompt says so, and the branch rules say so too: the agent is not the code owner, so it
-    cannot supply the approval its own pull request needs. A rule the model can be talked out of is
-    not a control, and neither is a rule the credential could ignore.
+  <div class="cards">
+    <div class="card"><h3>Lint</h3><p>Malformed YAML caught before Flux tries to apply it.</p></div>
+    <div class="card"><h3>Validate</h3><p>Builds every Flux root with Kustomize, discovered from the sync files so new components are covered automatically.</p></div>
+    <div class="card"><h3>Secret Scan</h3><p>TruffleHog over the PR's commits rather than its tip, so a credential added and deleted in the same branch still fails.</p></div>
+  </div>
+  <p class="small">
+    None of it validates against the live API. A Kustomize build proves the tree assembles, not that
+    the cluster will accept it, so a rejected field only shows up when Flux reconciles.
   </p>
 </section>
 
-<section aria-labelledby="papercuts">
-  <h2 id="papercuts">The mechanics that waste an afternoon</h2>
-  <ul>
-    <li>
-      <strong>CI filters by path.</strong> If the repository's check workflow doesn't watch the
-      directory you changed, no check attaches to your pull request and it reads as blocked forever.
-      "Wait for CI" becomes an infinite wait, and the fix is to widen the filter in its own change —
-      never to smuggle an unrelated file into the pull request to trip it.
-    </li>
-    <li>
-      <strong>A narrowly scoped token can't touch its own pipeline.</strong> An app installation that
-      can push code still can't push a workflow file without an extra permission, which is the correct
-      default and a confusing error. Sometimes the honest answer is "this one needs a human".
-    </li>
-    <li>
-      <strong>One risk per command.</strong> Bundling several checks into one shell line trains
-      whoever is reading to approve without reading. Splitting them is slower and that's the point.
-    </li>
-    <li>
-      <strong>Read the manifests, not the memory.</strong> Half the wrong statements in a document come
-      from describing what something did last month. The repository is what's true. A checkout that's
-      a week behind is a source of confident nonsense.
-    </li>
-  </ul>
+<section aria-labelledby="unattended">
+  <h2 id="unattended">The unattended version</h2>
+  <p>
+    When an alert wakes it, the loop is: read the alert, look at the resources and logs, answer in
+    the channel, and, if a manifest change is the fix, open a pull request and stop. It runs with the
+    same access as any other session, so the worst an unattended run can do is investigate and talk.
+    The merge waits for the human who was asleep.
+  </p>
+  <p>
+    The prompt says so, and the branch rules say so too: it is not the code owner, so it cannot
+    supply the approval its own pull request needs. A rule the model can be talked out of is not a
+    control, and neither is a rule the credential could ignore.
+  </p>
 </section>
 
 <section aria-labelledby="skills">
   <h2 id="skills">Its knowledge is versioned too</h2>
   <p>
-    The agent doesn't carry a personality file it was born with. It loads task-specific skills — how to
-    triage a stuck pod, how the alerting tree is shaped, how to publish this site — from files in a
-    repository, on demand. Each is a short document with the actual commands and the mistakes that cost
-    time.
+    The agent loads task-specific skills from files in a repository, on demand: how to triage a stuck
+    pod, how the alerting tree is shaped, how to publish this site. When a task teaches it something,
+    it updates the skill and commits it in the same session, which is where most of the lessons on
+    this site came from.
   </p>
   <p>
-    When a task teaches it something, it updates the skill and commits that, in the same session. That's
-    where most of the lessons on this site came from: something broke, the fix went in the repository,
-    and the next session starts already knowing.
+    That repository is the only place it can merge without me, and it is the right place for the
+    exception, because the failure mode of a bad note is a bad note rather than an outage.
   </p>
-  <div class="note">
-    <span class="label">The diagrams on this site are written the same way</span>
-    <p>
-      Every figure here is a Mermaid source file in the repository, rendered to SVG by a pinned image.
-      Editing a diagram is editing text, reviewing it is reviewing a diff, and it cannot quietly
-      drift from what the prose says — which is the failure mode of every diagram I have ever seen
-      go stale.
-    </p>
-  </div>
 </section>
 
 </main>
