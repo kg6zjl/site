@@ -131,9 +131,10 @@
 <section aria-labelledby="hygiene">
   <h2 id="hygiene">The habits that keep it trustworthy</h2>
   <p>
-    The ruleset and the routing tree are both parsed before merge, because a config rejected on
-    reload does not break one route — it stops every notification in the cluster. Past that gate,
-    four habits do the rest.
+    Neither artifact is checked by a Kustomize build, because a broken rule is still valid YAML,
+    and Prometheus rejects the whole rule set rather than the one bad rule. A script in the
+    repository runs <code>promtool</code> and <code>amtool</code> over both, but nothing calls it
+    automatically yet, so today this is checked by hand. Four habits do the rest.
   </p>
   <ul>
     <li><strong>Exempt narrowly, at the source.</strong> Scope an exemption to the process, its parent and the host — never a file path, never an image name. A generic base image is a whole class of containers.</li>
