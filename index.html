@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>I let an AI agent manage my home cluster</title>
-<meta name="description" content="Four mini PCs, one Kubernetes cluster, and an AI agent with read-only access and no secrets. The only way to change anything is via a pull request that I have to review.">
+<meta name="description" content="Four mini PCs, one Kubernetes cluster, and an AI agent with read-only access and no secrets. The only way to change the cluster is via a pull request that I have to review.">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -23,34 +23,30 @@
   <p class="eyebrow">Home cluster</p>
   <h1>I let an AI agent manage my cluster. It can't change anything without me.</h1>
   <p class="lede">
-    Hermes runs as a pod in my home Kubernetes cluster. It can read everything and
-    touch nothing. To change anything it opens a pull request, and I review and merge it.
+    Hermes runs as a pod in my home Kubernetes cluster. It can read the cluster's state — every
+    workload, log, event and metric — and change none of it. To change anything it opens a pull
+    request, and I review and merge it.
   </p>
   <p class="small">
-    Alerts and answers both land in Discord. The guardrails, what it watches, and what's still broken.
+    What it automates is the unremarkable half. The half worth reading is how much of this design
+    exists so that a confident wrong answer costs a rejected diff instead of an outage.
   </p>
 </header>
 
 <main>
 
-<figure class="shot narrow">
-  <a class="zoom" href="assets/img/discord-bot.png">
-    <img src="assets/img/discord-bot.png" alt="Discord bot screenshot" width="1008" height="2008" loading="lazy">
-  </a>
-  <figcaption><strong>Hermes in action.</strong> Discord is the human interface.</figcaption>
-</figure>
-
 <section aria-labelledby="why">
   <h2 id="why">Why bother</h2>
   <p>
-    Two versions of this are easy and neither is useful. An agent that can only look is safe
-    and pointless. An agent that can apply and delete is useful and one bad guess from a
-    disaster I clean up at 1am.
+    The version I wanted could fix the cluster at 1am. The version I was not willing to build could
+    break it at 1am. They differ by one property: whether a wrong answer can reach the cluster
+    without me seeing it first.
   </p>
   <p>
-    So I split reach from authority. It gets every workload, log, event and metric for
-    reading. It gets zero authority to mutate. Anything not in a merged commit is reverted
-    on the next Flux reconcile, so a bad idea costs a rejected pull request, not an outage.
+    So I split reach from authority. The agent gets the cluster's state for reading and no
+    authority to mutate. A change that is never merged never reaches the cluster, and anything
+    applied outside git is reverted on the next reconcile, so a bad idea costs a rejected pull
+    request rather than an outage.
   </p>
 
   <figure class="shot">
@@ -62,22 +58,32 @@
     </figcaption>
   </figure>
 
+  <figure class="shot narrow">
+    <a class="zoom" href="assets/img/discord-bot.png">
+      <img src="assets/img/discord-bot.png" alt="Discord bot screenshot" width="1008" height="2008" loading="lazy">
+    </a>
+    <figcaption><strong>Hermes in action.</strong> Discord is the human interface.</figcaption>
+  </figure>
+
   <div class="note">
     <span class="label">The part I didn't expect</span>
     <p>
-      Reviewing every change is nowhere near the tax I thought it would be, and it leaves a
-      written record of every change anything made — including me.
+      Reviewing every change costs far less than I assumed, and it leaves a written record of every
+      change, mine included.
     </p>
   </div>
 </section>
 
 <section aria-labelledby="wins">
-  <h2 id="wins">What it has actually done</h2>
+  <h2 id="wins">The work is mostly subtraction</h2>
+  <p>
+    None of the three things below was impressive to describe when it happened. All three are why I
+    still read the channel.
+  </p>
+
   <ul>
-    <li><strong>Deleted alerts that could not fire.</strong> Rules watching metrics that don't exist. It measured each against real data before shipping, and cut the decoration.</li>
-    <li><strong>Cut a paging alert for a weekly event.</strong> Reboots aren't incidents here. The signal moved to a dashboard.</li>
-    <li><strong>Found the hole in its own allow-list.</strong> Two API-server clients share a generic base image, so image matching would have exempted everything built on it. It matched namespace and pod instead.</li>
-    <li><strong>Turned two policies from reports into refusals.</strong> The guard on the agent's own identity now refuses violations instead of writing them to an unread audit.</li>
+    <li><strong>Found the hole in its own allow-list.</strong> Two API-server clients share a generic base image, so matching on the image would have exempted everything built on it. It matched namespace and pod instead.</li>
+    <li><strong>Turned two policies from reports into refusals.</strong> The guard on the agent's own identity now refuses a violation instead of writing it to an audit nobody reads.</li>
     <li><strong>Built the dashboard I actually wanted.</strong> The question was "why is this node unstable". Pressure stall and per-disk latency answered it: one reboot, not a sick node.</li>
   </ul>
 </section>
@@ -85,17 +91,15 @@
 <section aria-labelledby="cost">
   <h2 id="cost">What it costs</h2>
   <p>
-    Every wake spends real money, and the number moves with the models, so quoting one here
-    would measure a month that has already changed. Alert-driven wakes were the dominant cost
-    at the start. The fix was narrower filters, not switching the feedback path off: an hourly
-    poll, a short allow-list of alerts worth an unattended run, a dedupe gate, and a hard
-    ceiling on runs.
+    Every wake spends real money, and the number moves with the models, so quoting one here would
+    measure a month that has already changed. Alert-driven wakes were the dominant cost at the
+    start. The fix was narrower filters and a hard cap on runs, not switching the feedback path off.
   </p>
   <div class="note">
     <span class="label">The mistake I nearly made</span>
     <p>
-      The number that scared me was the whole provider account for a day. The agent's share was
-      a fraction of it. Read what a cost figure measures before rebuilding anything.
+      The number that scared me was the whole provider account for a day. The agent's share was a
+      fraction of it. Read what a cost figure measures before rebuilding anything.
     </p>
   </div>
 </section>
@@ -105,32 +109,13 @@
   <ul>
     <li><strong>One policy is fail-open on purpose.</strong> The guard that refuses exec, token minting and Secret writes doesn't run if Kyverno is down. Failing closed would block every Secret write in the cluster, and RBAC already covers the same ground.</li>
     <li><strong>Scan triage is behind the findings.</strong> The scanner works. Working through what it found is the problem.</li>
-    <li><strong>The registry is open inside the cluster.</strong> Fine while everything in it is a public base image or a build output. Not fine the day that stops being true.</li>
+    <li><strong>The registry is open inside the cluster.</strong> That is fine while everything in it is a public base image or a build output, and it stops being fine the day someone pushes a private one.</li>
   </ul>
-</section>
-
-<section aria-labelledby="next">
-  <h2 id="next">Read on</h2>
   <p>
-    <a href="guardrails.html">Guardrails</a> is the leash: permissions, secrets, networking,
-    and the policies that stop the agent widening its own rights.
-    <a href="monitoring.html">Monitoring</a> is what's measured and why the list is short.
-    <a href="alerting.html">Alerting</a> is the pipeline and the decisions that keep it quiet.
-    <a href="workflow.html">The loop</a> is how a change gets in.
-    <a href="stack.html">The stack</a> is every tool and why that one.
+    None of those are accidents. Each is a place where the honest design was cheaper than the
+    correct one, and all three are debts I have written down rather than solved. The rest of this
+    is about the parts that do hold.
   </p>
-</section>
-
-<section aria-labelledby="quotes">
-  <h2 id="quotes">What others said</h2>
-  <blockquote>
-    <p>A serious, adult implementation of constrained AI ops. Not revolutionary — GitOps plus least privilege plus a human gate is the correct pattern — but executed with unusual care and honesty about what still sucks.</p>
-    <footer>— Grok</footer>
-  </blockquote>
-  <blockquote>
-    <p>Broad read access, zero write authority, and every change routed through a Flux-reconciled pull request. The "what's weak right now" section is what sold it.</p>
-    <footer>— Claude</footer>
-  </blockquote>
 </section>
 
 </main>

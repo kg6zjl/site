@@ -23,8 +23,8 @@
   <p class="eyebrow">The stack</p>
   <h1>What each piece is for, and why that one</h1>
   <p class="lede">
-    Nothing here was picked because it was popular. Each entry answers a question I actually had,
-    and where the honest answer is "this is what I'd do differently", that's the entry.
+    A row is here because a question got asked. Where the honest answer is "this is what I'd do
+    differently", I have said so in the row.
   </p>
 </header>
 
@@ -32,18 +32,22 @@
 
 <section aria-labelledby="tools">
   <h2 id="tools">Running the cluster</h2>
+  <p>No piece here is clever; each one removes a job I used to do by hand.</p>
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
     <tbody>
-      <tr><td>MicroK8s</td><td>Installed from a snap, so the OS and its upgrades are one mechanism and a node is rebuildable from a playbook.</td></tr>
-      <tr><td>Flux CD</td><td>The only thing that writes to the cluster. Continuous reconcile means anything not in a merged commit gets reverted — which is what makes "the agent can try things" a bounded risk.</td></tr>
+      <tr><td>MicroK8s</td><td>Installed from a snap, so the cluster and its upgrades are one mechanism, and a node that goes bad is rebuilt from a playbook rather than repaired by hand.</td></tr>
+      <tr><td>Flux CD</td><td>The only thing that writes to the cluster. Continuous reconcile means anything not in a merged commit gets reverted, which is what makes "the agent can try things" a bounded risk.</td></tr>
       <tr><td>Flux Operator</td><td>Declares the Flux install as an object in git, so there's no hand-run bootstrap nobody can reproduce.</td></tr>
       <tr><td>Dex</td><td>SSO for humans, not workloads. The API server trusts it as an OIDC issuer, so access is a token with an expiry rather than a cert copied between machines.</td></tr>
       <tr><td>Kustomize + Helm</td><td>How a directory becomes YAML: overlays and pinned chart values, so two environments differ by a small diff.</td></tr>
     </tbody>
   </table>
+</section>
 
-  <h2 id="edge">Traffic in, certificates out</h2>
+<section aria-labelledby="edge">
+  <h2 id="edge">Traffic, storage, secrets</h2>
+  <p>Everything between the internet and a pod, chosen so that adding a hostname is not also a certificate problem.</p>
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
     <tbody>
@@ -51,77 +55,67 @@
       <tr><td>MetalLB</td><td>Real LAN addresses for LoadBalancer services, so ingress behaves like ingress instead of a router port-forward.</td></tr>
       <tr><td>cert-manager</td><td>Renewal is somebody else's job, because an expired cert looks exactly like an outage.</td></tr>
       <tr><td>external-dns</td><td>Publishes the record from the object that declares the route. One manual step gone per hostname.</td></tr>
-    </tbody>
-  </table>
-
-  <h2 id="storage">Storage and secrets</h2>
-  <table>
-    <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
-    <tbody>
       <tr><td>Longhorn</td><td>Replicated block storage with no SAN to buy. The heaviest thing here and still worth it: a node can die without taking a volume. Upgrades wait for an explicit window.</td></tr>
       <tr><td>1Password Connect + External Secrets Operator</td><td>The only path a secret value takes to a pod. Nothing in git, and the agent has no read path at all.</td></tr>
-      <tr><td>Stakater Reloader</td><td>Restarts a workload when its secret changes. Without it the Secret is rewritten and the pod never notices — a bug that survives for months because nothing is <em>wrong</em>.</td></tr>
+      <tr><td>Stakater Reloader</td><td>Restarts a workload when its secret changes. Without it the Secret is rewritten and the pod never notices, which is a bug that survives for months because nothing is <em>wrong</em>.</td></tr>
     </tbody>
   </table>
+</section>
 
-  <h2 id="honest">Keeping the agent honest</h2>
+<section aria-labelledby="notice">
+  <h2 id="notice">Refusing, and noticing</h2>
+  <p>One group refuses a change, the other tells me when something moved without one.</p>
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
     <tbody>
       <tr><td>Kyverno</td><td>Admission policies, including two on the agent's own identity. It refuses rather than reports, and the CI fixtures must refuse.</td></tr>
-      <tr><td>NetworkPolicy</td><td>Default-deny both ways in every namespace. Also the most common cause of a connectivity bug I'll chase — diagnosable because the answer is a file, not a guess about the prompt.</td></tr>
-    </tbody>
-  </table>
-
-  <h2 id="notice">Noticing problems</h2>
-  <table>
-    <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
-    <tbody>
-      <tr><td>kube-prometheus-stack</td><td>Prometheus, Alertmanager and Grafana as one chart. What's portable is the rule format and query language, not the installer.</td></tr>
+      <tr><td>NetworkPolicy</td><td>Default-deny both ways in every namespace. Also the most common cause of a connectivity bug I'll chase, and diagnosable because the answer is a file rather than a guess about the prompt.</td></tr>
+      <tr><td>kube-prometheus-stack</td><td>Prometheus, Alertmanager and Grafana as one chart, with the rules as files beside the dashboards.</td></tr>
       <tr><td>Alloy + Loki</td><td>Log shipping and storage. Alloy ships from every pod, Loki stores, Grafana queries.</td></tr>
       <tr><td>blackbox-exporter</td><td>Probes each hostname from outside, so "is it up" is measured rather than assumed.</td></tr>
       <tr><td>Trivy Operator</td><td>Findings as Kubernetes objects, so they query, alert and get triaged like everything else instead of sitting in a report nobody reads.</td></tr>
-      <tr><td>Falco + falcosidekick</td><td>Syscall detection — what a process does after it starts, which admission and scanning structurally cannot see. Sidekick routes it through Alertmanager.</td></tr>
+      <tr><td>Falco + falcosidekick</td><td>Syscall detection, meaning what a process does after it starts, which admission and scanning structurally cannot see. Sidekick routes it through Alertmanager.</td></tr>
     </tbody>
   </table>
+</section>
 
-  <h2 id="acting">Acting</h2>
+<section aria-labelledby="acting">
+  <h2 id="acting">Acting, and the ways in</h2>
+  <p>The parts that open the pull requests, apply the result, or talk to me.</p>
   <table>
     <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
     <tbody>
       <tr><td>Hermes</td><td>Read-only RBAC in the cluster, GitHub App identity in git. Its only write is a pull request, and the author is never the reviewer.</td></tr>
       <tr><td>Redis</td><td>One job: the dedupe gate on alert-driven runs. A component this small is justified by the bill it prevents.</td></tr>
       <tr><td>Actions Runner Controller</td><td>Ephemeral runners that are pods in the cluster they test, so CI meets production's network rules.</td></tr>
-      <tr><td>Renovate</td><td>One PR per version bump, hourly, never merges. Understands Helm values and Kustomize overlays, which is most of this repo.</td></tr>
+      <tr><td>Renovate</td><td>One PR per version bump, hourly, never merges. It understands Helm values and Kustomize overlays, which is most of this repository.</td></tr>
       <tr><td>Crossplane</td><td>Manages the GitHub webhook as an object, because the URL used to be a hand-copied secret nothing could rotate.</td></tr>
       <tr><td>Discord + ntfy</td><td>The whole human interface. A channel per job, one webhook each, pushes for criticals only.</td></tr>
-    </tbody>
-  </table>
-
-  <h2 id="hosts">The hosts</h2>
-  <table>
-    <thead><tr><th>Tool</th><th>Why this one</th></tr></thead>
-    <tbody>
-      <tr><td>Ansible</td><td>Node config in the same repo, resolving secrets at run time. The OS is a machine problem and the cluster is a set of pinned versions; people ruin both by treating them as one.</td></tr>
+      <tr><td>Ansible</td><td>Node config in the same repo, resolving secrets at run time. The OS is a machine problem and the cluster is a set of pinned versions. I have confused the two once, and it cost me both.</td></tr>
     </tbody>
   </table>
   <p class="small">
-    Also present and unremarkable: metrics-server, an SMB CSI driver for the NAS, a registry mirror, and a container registry.
+    Also present and unremarkable: metrics-server, an SMB CSI driver for the NAS, a registry mirror,
+    and a container registry.
   </p>
 </section>
 
 <section aria-labelledby="swap">
   <h2 id="swap">What I would do differently</h2>
   <ul>
-    <li><strong>The distribution was a lateral move.</strong> Off one Kubernetes distro and onto another — days of work, nothing bought.</li>
-    <li><strong>Two things do one job between them.</strong> The cluster grew faster than the questions asked of it.</li>
-    <li><strong>The agent can't be useful without a human.</strong> That's the design, not a dead end, but every fix waits for me.</li>
+    <li><strong>The distribution was a lateral move.</strong> Off one Kubernetes distro and onto another: days of work, nothing bought.</li>
+    <li><strong>The registry is open inside the cluster.</strong> It was the fast choice and I have not had to pay for it yet. The day a private image lands in it, I will.</li>
   </ul>
+  <p class="small">
+    The agent cannot be useful without a human. That is the design rather than a dead end, but it
+    does mean every fix waits for me.
+  </p>
   <div class="note">
     <span class="label">The test I apply to any addition</span>
     <p>
-      If a component can't be justified by a question I've actually asked, it doesn't go in. Slow,
-      and it's why the list is still short enough to read.
+      If a component cannot be justified by a question I have actually asked, it does not go in.
+      That is a slow way to build. It is also why every component on this page still has a reason I
+      can say out loud.
     </p>
   </div>
 </section>

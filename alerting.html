@@ -23,12 +23,28 @@
   <p class="eyebrow">Alerting</p>
   <h1>An alerting pipeline is only worth having if you still read it</h1>
   <p class="lede">
-    Sending an alert is easy. Making the one that arrives at 1am worth getting out of bed for is
-    the whole job.
+    The measure of this pipeline is not how much it sends. It is whether I still believe the message
+    when it arrives at one in the morning.
   </p>
 </header>
 
 <main>
+
+<section aria-labelledby="deadman">
+  <h2 id="deadman">The alert that always fires</h2>
+  <p>
+    One rule is always firing, on purpose. Its <em>absence</em> is the alarm: it means the rules
+    stopped loading, the scrape died, or delivery broke.
+  </p>
+  <p>
+    Alertmanager cannot report its own death, because every notification travels through it. So a
+    scheduled job outside the pipeline posts straight to the push service from a different machine,
+    and checks two things: that Alertmanager still answers its readiness endpoint, and that the
+    always-firing rule is still firing in Prometheus. The second check matters more than it sounds,
+    since from the inside a Prometheus that has stopped evaluating looks exactly like one with
+    nothing to report. If that job ever stops posting, the silence is the alarm.
+  </p>
+</section>
 
 <section aria-labelledby="shape">
   <h2 id="shape">The shape</h2>
@@ -37,21 +53,23 @@
       <img src="assets/img/alerting.svg" alt="A rule in git fires into Alertmanager, which reaches a human three ways and the agent a fourth, through an allow-listed hourly gate." width="530" height="743" loading="lazy">
     </a>
     <figcaption>
-      <strong>Two exits.</strong> One wakes me. The other only ever opens a pull request, so it lands in the same review queue with the same human at the end — just started while I was asleep.
+      <strong>Two kinds of exit.</strong> Three routes wake me. The fourth can answer in the channel or open a pull request, and it can never merge. If it opens one, it lands in the same review queue with the same human at the end.
     </figcaption>
   </figure>
   <p>
-    Rules, routes, receivers and inhibits are files in the repository. A change to any of them is a
-    pull request, so the alerting config has a history and a reviewer instead of being something
-    fixed in a hurry.
+    Rules, routes, receivers and inhibits are files in the repository, and so are silences: a mute
+    that lives only in the API does not survive a rebuild, so a maintenance window is a route in git
+    with a written reason and an expiry. A change to any of it is a pull request, which gives the
+    alerting config a history and a reviewer instead of being something fixed in a hurry.
   </p>
 </section>
 
 <section aria-labelledby="channels">
   <h2 id="channels">Discord is the interface</h2>
   <p>
-    Not a dashboard I check — I would not check it. Channels, each with one job, so a policy finding
-    and a paging incident never share a thread.
+    Everything arrives in Discord, because Discord is where I already am. A dashboard is somewhere I
+    would have to remember to look. Each channel has exactly one job, so a policy finding and a
+    paging incident never end up in the same thread arguing about what they mean.
   </p>
   <figure class="shot">
     <a class="zoom" href="assets/img/discord.svg">
@@ -71,8 +89,8 @@
     <p>
       A channel webhook can add a message to the one channel it was created in. It cannot read
       history, react, join elsewhere, or be used by a client in the container. It is also permanently
-      bound to that channel, so the separation between channels is a property of the credential
-      rather than a routing rule someone has to maintain.
+      bound to its channel, so the separation between channels is a property of the credential
+      rather than a routing rule someone has to remember to maintain.
     </p>
   </div>
 </section>
@@ -85,45 +103,26 @@
     down" into "half of paging is down", which is a much smaller problem.
   </p>
   <p>
-    If everything pages, nothing does. Every alert here has to be one I would rather stop reading
-    than miss.
-  </p>
-</section>
-
-<section aria-labelledby="deadman">
-  <h2 id="deadman">The alert that proves the pipeline works</h2>
-  <p>
-    There is an alert that always fires. It isn't noise, it's a dead man's switch: its <em>absence</em>
-    means the rules stopped loading, the scrape died, or delivery broke.
-  </p>
-  <p>
-    Alertmanager can't report its own death — every notification travels through it. So a scheduled
-    job outside the pipeline posts straight to the push service, on a different machine, and checks
-    two things: that Alertmanager still answers readiness, and that the always-firing rule is still
-    firing in Prometheus. From inside, a Prometheus that stopped evaluating looks identical to one
-    with nothing to report. That check is the break glass.
-  </p>
-  <p class="small">
-    Silences follow the same rule: a mute that lives only in the API doesn't survive a rebuild. A
-    maintenance window is a route in git with a written reason and an expiry.
+    The discipline is that if everything pages, nothing does. Every alert here has to be one I would
+    rather stop reading than miss.
   </p>
 </section>
 
 <section aria-labelledby="second">
   <h2 id="second">The agent is the second responder, not the pager</h2>
   <p>
-    A scheduled job reads what's firing and posts new alerts to the agent's webhook — signed,
-    in-cluster only. The agent wakes up knowing what broke, looks at the resources and logs, and
-    answers in the channel. If a manifest change is the fix, it opens a pull request and stops.
+    A scheduled job reads what is firing and posts new alerts to the agent's webhook — signed, and
+    in-cluster only. The agent wakes up already knowing what broke, and answers in the channel. What
+    a run may then do is the next page's subject.
   </p>
   <p>
-    Nothing on the network can hand the agent a task: Alertmanager can't sign an inbound request, so
-    that job is the only sender and it forwards only what Alertmanager is already firing.
+    Nothing on the network can hand the agent a task, because Alertmanager cannot sign an inbound
+    request. That job is the only sender, and it forwards only what Alertmanager is already firing.
   </p>
   <p>The controls on that path matter, because this is the part that spends money:</p>
   <ul>
     <li><strong>An allow-list by alert name.</strong> Everything else still notifies me; it just never spends a run.</li>
-    <li><strong>An hourly poll.</strong> The wake path isn't the paging path — my phone is already ahead of it.</li>
+    <li><strong>An hourly poll.</strong> The wake path isn't the paging path, so my phone is always ahead of it.</li>
     <li><strong>A dedupe gate.</strong> A standing alert would otherwise cost a run an hour, forever.</li>
     <li><strong>A hard ceiling.</strong> One run per poll, plus a daily cap.</li>
   </ul>
@@ -131,9 +130,14 @@
 
 <section aria-labelledby="hygiene">
   <h2 id="hygiene">The habits that keep it trustworthy</h2>
+  <p>
+    The ruleset and the routing tree are both parsed before merge, because a config rejected on
+    reload does not break one route — it stops every notification in the cluster. Past that gate,
+    four habits do the rest.
+  </p>
   <ul>
     <li><strong>Exempt narrowly, at the source.</strong> Scope an exemption to the process, its parent and the host — never a file path, never an image name. A generic base image is a whole class of containers.</li>
-    <li><strong>Measure a rule before shipping it.</strong> A rule that can't fire gets deleted, not admired. And the whole ruleset is parsed before merge, because a config rejected on reload stops every notification in the cluster.</li>
+    <li><strong>Measure a rule before shipping it.</strong> A rule that can't fire gets deleted, not admired.</li>
     <li><strong>Link every notification to the graph.</strong> One that doesn't link to something actionable gets ignored at 1am.</li>
     <li><strong>Inhibit by cause.</strong> One root cause shouldn't produce nine alerts.</li>
   </ul>
@@ -147,7 +151,9 @@
     <li><strong>Provider balance alarms.</strong> The rule fires and notifies; it doesn't spend an agent run on a number I've decided not to act on.</li>
   </ul>
   <p class="small">
-    Each is written down where the rule lives, with the date, so nobody re-litigates it.
+    Each is written down where the rule lives, with the date, so nobody re-litigates it. This list
+    matters more than the rules do: an alert I have decided to ignore teaches me to ignore the
+    channel, and the channel is the only place any of this arrives.
   </p>
 </section>
 

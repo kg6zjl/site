@@ -30,37 +30,40 @@
 
 <main>
 
+<section aria-labelledby="nodes">
+  <h2 id="nodes">The question that started this</h2>
+  <p>
+    A node kept looking unstable and the obvious metrics agreed there was no problem. Load average
+    was low, and iowait was 0.1%. Neither number means what people think it means: load average
+    counts runnable tasks and ignores the ones blocked on a disk, and iowait is often just an idle
+    device. I had been reading two instruments that could not register the fault.
+  </p>
+  <p>So the dashboard answers four questions instead, in this order.</p>
+  <ul>
+    <li><strong>Pressure stall.</strong> Time work spent waiting on CPU, memory and IO. It moves when there's a problem and sits still when there isn't.</li>
+    <li><strong>Disk latency with throughput.</strong> Latency alone is a lie, because the slowest device is usually slow for being idle. It only means something next to the operation count.</li>
+    <li><strong>Memory, swap and OOM kills.</strong> A kernel kill is a fact, not an inference from a percentage.</li>
+    <li><strong>Reboots, as annotations.</strong> One reboot explains a hundred downstream symptoms, so it belongs on the graph rather than in an alert.</li>
+  </ul>
+  <p>
+    That found one reboot after seven days of uptime, with no metric explaining it. The node was
+    never sick. The earlier framing — flaky node, degraded disk — was wrong because the first
+    metrics I looked at could not have told me either way.
+  </p>
+</section>
+
 <section aria-labelledby="shape">
   <h2 id="shape">The shape</h2>
   <figure class="shot">
     <a class="zoom" href="assets/img/monitoring.svg">
       <img src="assets/img/monitoring.svg" alt="Node exporter, kube-state-metrics and blackbox-exporter feed Prometheus; Grafana Alloy ships logs to Loki; both feed Grafana, and Prometheus feeds Alertmanager." width="786" height="380" loading="lazy">
     </a>
-    <figcaption><strong>Collectors in, dashboards and alerts out.</strong> Where a firing alert goes next is on the alerting page.</figcaption>
+    <figcaption><strong>Collectors in, dashboards and alerts out.</strong></figcaption>
   </figure>
   <p>
-    One metrics store, one log store, one dashboard tool, from a single well-worn chart — what is
-    portable is the rule format and the query language, not the installer. Metrics are scraped; logs
-    are shipped by Alloy. Nothing is sampled down.
-  </p>
-</section>
-
-<section aria-labelledby="nodes">
-  <h2 id="nodes">Nodes: the question that started this</h2>
-  <p>
-    A node kept looking unstable and the obvious metrics agreed there was no problem. Load average
-    was low. iowait was 0.1%. Neither number means what people think it means.
-  </p>
-  <ul>
-    <li><strong>Pressure stall.</strong> Time work spent waiting on CPU, memory and IO. It moves when there's a problem and sits still when there isn't.</li>
-    <li><strong>Disk latency with throughput.</strong> Latency alone is a lie — the slowest device is usually slow because it's idle. It only means something next to operation count.</li>
-    <li><strong>Memory, swap and OOM kills.</strong> A kernel kill is a fact, not an inference from a percentage.</li>
-    <li><strong>Reboots, as annotations.</strong> One reboot explains a hundred downstream symptoms. It belongs on the graph, not in an alert.</li>
-  </ul>
-  <p>
-    That found one reboot after seven days of uptime, with no metric explaining it. The node was
-    never sick. The earlier framing — flaky node, degraded disk — was wrong because the first
-    metrics I looked at couldn't have told me either way.
+    One metrics store, one log store, one dashboard tool, from a single well-worn chart. What is
+    portable is the rule format and the query language, not the installer. Metrics are scraped, logs
+    are shipped by Alloy, and nothing is sampled down.
   </p>
 </section>
 
@@ -72,24 +75,16 @@
       <p>Git is the source of truth, so a resource that won't reconcile is the failure that matters. Alert on the outcome — still not ready after fifteen minutes — not on every retry.</p>
     </div>
     <div class="card">
-      <h3>Is it reachable</h3>
-      <p>blackbox probes each published hostname from outside, so "the site is up" is measured. Certificates and the SSO discovery document are probed separately: a Running pod says nothing about whether the document is being served.</p>
-    </div>
-    <div class="card">
-      <h3>Storage</h3>
-      <p>Usage per filesystem and the shared share. Boring until one fills up, and every one has a known failure when it does.</p>
-    </div>
-    <div class="card">
       <h3>Jobs that should have run</h3>
       <p>Alert on absence, not just failure. A schedule that stops firing produces no error at all, which is the worst kind of silent.</p>
     </div>
     <div class="card">
-      <h3>Where traffic leaves</h3>
-      <p>Which route egress takes and what address it presents. A mismatch looks like a random third of the cluster being broken.</p>
+      <h3>Is it reachable</h3>
+      <p>blackbox probes each published hostname from outside, so "the site is up" is measured. Certificates and the SSO discovery document are probed separately: a Running pod says nothing about whether the document is being served.</p>
     </div>
     <div class="card">
-      <h3>Spend</h3>
-      <p>The API provider's balance. It quietly drains and only matters the day it empties.</p>
+      <h3>Where traffic leaves</h3>
+      <p>Which route egress takes and what address it presents. A mismatch looks like a random third of the cluster being broken.</p>
     </div>
   </div>
 </section>
@@ -98,14 +93,14 @@
   <h2 id="dash">Dashboards</h2>
   <p>
     One per question I actually ask: nodes, scanning, billing, logs, storage. They are files next to
-    the alert rules, so a panel is reviewed like a rule — which caught a node panel querying the
-    wrong label.
+    the alert rules, so a panel is reviewed the way a rule is, which is how I caught a node panel
+    querying the wrong label.
   </p>
   <div class="note">
     <span class="label">Every panel is checked against real data before it ships</span>
     <p>
-      A query that returns nothing looks exactly like a system with nothing wrong. "No data" and "no
-      problems" are the same picture, which is the most expensive mistake in monitoring.
+      A query that returns nothing looks exactly like a system with nothing wrong, which is the most
+      expensive mistake in monitoring.
     </p>
   </div>
 </section>
@@ -113,8 +108,8 @@
 <section aria-labelledby="gaps">
   <h2 id="gaps">What isn't measured</h2>
   <ul>
-    <li><strong>No tracing.</strong> A slow request across three services can't be followed end to end. Acceptable until something gets slow enough to matter.</li>
-    <li><strong>Nothing measures the house.</strong> Power, temperature and network gear are a separate system. If a breaker trips, the cluster is the last to know.</li>
+    <li><strong>No tracing.</strong> A slow request across three services can't be followed end to end. That is acceptable at home, and it stops being acceptable the first time a slow request costs me an evening.</li>
+    <li><strong>Nothing measures the house.</strong> Power, temperature and network gear are a separate system, so if a breaker trips the cluster is the last thing to know.</li>
   </ul>
 </section>
 

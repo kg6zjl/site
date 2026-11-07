@@ -21,24 +21,35 @@
 
 <header class="page-head">
   <p class="eyebrow">Guardrails</p>
-  <h1>Read-only, no secrets, and one policy that watches the agent itself</h1>
+  <h1>Almost everything here is something the agent cannot do</h1>
   <p class="lede">
-    Five things stop this going wrong: permissions, secret access, networking, admission, and the
-    fact that the agent can't merge its own changes. Each covers a different failure.
-  </p>
-  <p>
-    The default everywhere is deny. Anything it has was written down and reviewed, not left
-    unwatched. Every access decision here is a file in the repository with a diff and a history.
+    None of this makes the model more careful. It makes the consequences smaller: no write verbs,
+    no secret values, barely any network, and no way to approve its own work.
   </p>
 </header>
 
 <main>
 
+<section aria-labelledby="real">
+  <h2 id="real">A real one that fired</h2>
+  <p>
+    The <code>alert-detector</code> cron woke the agent at 04:00 because a <code>plane-worker</code>
+    pod had hit its memory limit. It read the live state, diagnosed the OOM, opened the memory
+    bump, and a human merged it six minutes later. Nobody was at the keyboard until the merge.
+  </p>
+  <p>
+    That is the system working, and it is not the interesting part. The interesting part is what
+    the agent could have done instead: delete the pod and hope, raise the limit in place, or read
+    the credentials on the way past. What follows is why that was the only move available to it.
+  </p>
+</section>
+
 <section aria-labelledby="controls">
   <h2 id="controls">Five controls, none load-bearing alone</h2>
   <p>
     They are independent on purpose. A single gate that mostly works is one bug away from nothing;
-    five narrow ones are one bug away from four.
+    five narrow ones are one bug away from four. Every permission inside the cluster is a file in the
+    repository, with a diff and a history.
   </p>
   <figure class="shot">
     <a class="zoom" href="assets/img/guardrails.svg">
@@ -46,45 +57,12 @@
     </a>
     <figcaption><strong>The five.</strong> Ordered from hardest to bypass to easiest to get wrong.</figcaption>
   </figure>
-</section>
-
-<section aria-labelledby="gate">
-  <h2 id="gate">The merge gate</h2>
   <p>
-    Control five isn't a file, so it can't be diffed. It is a setting on GitHub, written down here
-    because a control nobody re-reads is a control nobody notices drifting.
-  </p>
-  <table>
-    <thead><tr><th>Setting</th><th>What it stops</th></tr></thead>
-    <tbody>
-      <tr><td>Require a pull request review</td><td>Merging without anyone reading the diff</td></tr>
-      <tr><td>Require a code owner approval</td><td>The agent approving its own work</td></tr>
-      <tr><td>Dismiss stale approvals on push</td><td>Reviewing a diff, then pushing more under that approval</td></tr>
-      <tr><td>Enforce for administrators</td><td>Me skipping my own rules, which is the one I'd skip first</td></tr>
-      <tr><td>Require up to date + linear history</td><td>Conflicts resolved on an unread diff, and merge-commit soup</td></tr>
-    </tbody>
-  </table>
-  <p class="small">
-    Required approvals is zero and that is not a hole: <code>CODEOWNERS</code> is a wildcard, so
-    every file has an owner and every pull request needs one approval. The agent holds write
-    access, but it is not the code owner, so it cannot supply the approval its own PR needs.
-  </p>
-</section>
-
-<section aria-labelledby="ci">
-  <h2 id="ci">What CI proves — and what it doesn't</h2>
-  <p>
-    Three required checks gate the merge. All three are content gates, and none of them proves the
-    change is <em>correct</em> — that is the review.
-  </p>
-  <div class="cards">
-    <div class="card"><h3>Lint</h3><p>Malformed YAML caught before Flux tries to apply it.</p></div>
-    <div class="card"><h3>Validate</h3><p>Builds every Flux root with Kustomize, discovered from the sync files so new components are covered automatically.</p></div>
-    <div class="card"><h3>Secret Scan</h3><p>TruffleHog over the PR's commits, not its tip — a credential added and deleted in the same branch still fails.</p></div>
-  </div>
-  <p class="small">
-    Nothing validates against the live API. A Kustomize build proves the tree assembles, not that
-    the cluster will accept it; a rejected field only shows up when Flux reconciles.
+    The fifth control isn't a file, so it can't be diffed, and that is exactly how it drifts. The
+    repository requires a review and a code owner approval, and enforces both for administrators:
+    me skipping my own rules is the one I would skip first. Required approvals is zero, which looks
+    like a hole and isn't, because <code>CODEOWNERS</code> is a wildcard. Every file has an owner,
+    the agent is not one, and so it cannot approve the pull request its own change needs.
   </p>
 </section>
 
@@ -108,8 +86,9 @@
     </tbody>
   </table>
   <p class="small">
-    When it needs something it can't read, the answer is a reviewed job that reads it and logs a
-    sanitised result — never a wider role.
+    The left column is generous and the right one is not, which is the whole design. When the agent
+    needs something it cannot read, the answer is a reviewed job that reads it and logs a sanitised
+    result, never a wider role.
   </p>
 </section>
 
@@ -127,7 +106,7 @@
   <p>
     Two Kyverno ClusterPolicies watch the agent's own identity, for the case where it talks me into
     a bad change. One keeps its role read-only and its bindings limited to read-only roles. The
-    other denies <code>pods/exec</code>, token creation and Secret writes made as the agent — the
+    other denies <code>pods/exec</code>, token creation and Secret writes made as the agent. The
     RBAC already withholds all three, so this holds if that RBAC is widened by mistake.
   </p>
   <div class="note">
@@ -148,40 +127,43 @@
   </p>
   <p>
     The agent's own credentials follow the same rule with one extra step. Its identity is a GitHub
-    App, so the author and the reviewer are not the same identity. The App key is mounted only into
-    the containers that mint tokens: an init container mints one at start, a sidecar re-mints before
-    expiry, and the agent reads a short-lived token from a shared directory. The durable key never
-    enters the container the model drives.
+    App, and the App key is mounted only into the containers that mint tokens: an init container
+    mints one at start, a sidecar re-mints before expiry, and the agent reads a short-lived token
+    from a shared directory. The durable key never enters the container the model drives.
   </p>
 </section>
 
 <section aria-labelledby="identities">
-  <h2 id="identities">Apps, not personal tokens</h2>
+  <h2 id="identities">Why not a personal token</h2>
   <p>
-    Every machine identity here is an app or a webhook, never a human credential copied into a
-    container. That choice is most of the blast radius.
+    The default is an app or a webhook, never a human credential in a container. The reason is
+    narrower than general hygiene, and it is why the merge gate above works at all: an app is not me.
   </p>
-  <table>
-    <thead><tr><th></th><th>GitHub App</th><th>Personal access token</th></tr></thead>
-    <tbody>
-      <tr><td>Lifetime</td><td>Installation token expires in an hour</td><td>Months, unless someone remembers</td></tr>
-      <tr><td>Scope</td><td>Only the repositories it is installed on</td><td>Every repository the human can reach, or a hand-picked subset that widens silently</td></tr>
-      <tr><td>Identity</td><td>Its own actor in the audit log</td><td>Indistinguishable from the human</td></tr>
-      <tr><td>If leaked</td><td>Dies within the hour; revoke the installation</td><td>Live until rotated, and nothing tells you it leaked</td></tr>
-      <tr><td>Offboarding</td><td>Uninstall the app</td><td>Remember every token the person ever made</td></tr>
-    </tbody>
-  </table>
   <p>
-    The same reasoning covers chat and mail: the agent posts through a webhook, not a bot account
-    with channel access. There is no chat client in the container and no account to borrow. It can
-    talk to one channel; it cannot read history, join anything, or act as anyone.
+    A personal access token is one line of setup and a great deal of trouble. In every log and every
+    audit trail it is me — same actor, same reach, same permissions. It would let the agent act on
+    repositories it has no business in, and it would let it approve its own pull requests, because
+    the identity supplying the approval would be the code owner. The gate would still be there,
+    with nothing behind it.
+  </p>
+  <p>
+    An App costs an hour of setup and buys three properties. Its installation token expires after
+    one hour, so a leaked credential has a shelf life rather than a rotation date nobody remembers.
+    Its scope is the repositories it is installed on, not everything I can reach. And it is its own
+    actor in the audit log, which is what keeps "the agent wrote this" and "a human approved this"
+    as two separate facts rather than one sentence.
+  </p>
+  <p class="small">
+    The same reasoning covers chat: the agent posts through a webhook rather than a bot account,
+    which is why the separation between channels on the alerting page is a property of the
+    credential rather than a routing rule someone maintains.
   </p>
   <div class="note">
     <span class="label">Where a token is still the answer</span>
     <p>
-      A repository under a different owner is outside the App's installation, so no installation
-      token can reach it. That case gets a fine-grained token scoped to that one repository and two
-      permissions, synced from the vault like everything else — and it is the exception, written down.
+      A repository under a different owner sits outside the App's installation, so no installation
+      token can reach it. That is the one place a human-owned token is correct, and it is confined
+      on purpose: one repository, two permissions, synced from the vault like everything else.
     </p>
   </div>
 </section>
@@ -215,40 +197,12 @@
   </div>
 </section>
 
-<section aria-labelledby="change-flow">
-  <h2 id="change-flow">Change flow</h2>
-  <p>
-    Three reasons a change shows up: something moved upstream, a machine needs patching, or I decide
-    something should be different. All three are a reviewed diff. None is a login and a manual command.
-  </p>
-  <figure class="shot">
-    <a class="zoom" href="assets/img/patching.svg">
-      <img src="assets/img/patching.svg" alt="Three change sources feeding one pull request merged by a human, then branching to Flux for cluster changes and Ansible for host changes." width="836" height="465" loading="lazy">
-    </a>
-    <figcaption><strong>Three ways in, one gate, two appliers.</strong> The merged diff decides: Flux for the cluster, Ansible for the machines.</figcaption>
-  </figure>
-  <h3>The hosts</h3>
-  <p>
-    Node config is Ansible in the same repository: packages, kernel settings, the Kubernetes snap
-    channel, mounts, accounts. Secrets resolve from the vault at run time. Security updates install
-    unattended and reboot on a staggered timetable, one host at a time, ordered so quorum never drops
-    — which is why a reboot is an annotation on a dashboard, not a page.
-  </p>
-  <h3>The versions</h3>
-  <p>
-    Nothing floats on <code>latest</code>. Charts, images, actions and CLI tools are pinned, and
-    Renovate checks hourly and opens one pull request per bump. Renovate over Dependabot because it
-    understands Helm values and Kustomize overlays, which is most of this repository.
-  </p>
-</section>
-
 <section aria-labelledby="state">
+
   <h2 id="state">The pod is disposable</h2>
   <p>
-    Config and skills are re-seeded from git on every start, and work happens in a throwaway worktree
-    per task. Nothing durable lives only inside the pod, so "restart it" is always safe. Its skills
-    are files in a repository with a history, which is where most of the entries on
-    <a href="index.html">Why</a> came from.
+    Config and skills are re-seeded from git on every start, and work happens in a throwaway
+    worktree per task. Nothing durable lives only inside the pod, so "restart it" is always safe.
   </p>
   <div class="note">
     <span class="label">The rule that came from breaking something</span>
@@ -258,15 +212,6 @@
       environment needs approval first, including when the change looks obviously correct.
     </p>
   </div>
-</section>
-
-<section aria-labelledby="real">
-  <h2 id="real">A real one that fired</h2>
-  <p>
-    The <code>alert-detector</code> cron woke the agent at 04:00 because a <code>plane-worker</code>
-    pod hit its memory limit. It read the live state, diagnosed the OOM, opened the memory bump, and
-    a human merged six minutes later. Nobody was at the keyboard until the merge.
-  </p>
 </section>
 
 </main>
