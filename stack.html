@@ -291,6 +291,12 @@
       left the workflow entirely, because the cluster now reconciles itself. The stale references to
       Helmfile still scattered through the repository notes are proof that a migration does not
       finish when the manifests move.</li>
+    <li><strong>I would have bought more GPU.</strong> The local stack runs on a single 16GB card,
+      and it works by making its two jobs take turns: the language model stops while a render is
+      queued and starts again once the queue drains. The model I actually wanted does not fit — the
+      27B quant is 16.8GB on a 16GB card — so the one that does fit is a compromise. I tried running
+      the agent locally first and ended up on a hosted model, which is a decision a bigger card
+      would have avoided.</li>
     <li><strong>The distribution was a lateral move.</strong> I moved off one Kubernetes
       distribution and onto another, which cost days and bought nothing. Pick a distribution on its
       merits once.</li>
