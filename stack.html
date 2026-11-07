@@ -235,8 +235,8 @@
       </tr>
       <tr>
         <td>Runner toolcache warmer</td>
-        <td>A cache of the nine release binaries CI keeps needing, filled on each node outside any
-          job. A runner exists for one job and is thrown away, so without this every run re-downloads
+        <td>A local cache of the binaries required for CI, on every node. A runner exists for one
+          job and is thrown away, so without this every run re-downloads
           its tools, and GitHub's release CDN delivers about 300KB/s from here: two minutes for
           trufflehog, two and a half for kyverno, six for prometheus. It has to be a DaemonSet rather
           than a runner init container, because a download started inside a job gets killed by the
