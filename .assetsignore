@@ -1,0 +1,12 @@
+# Workers uploads everything inside the asset directory, which here is the repository root.
+# Pages used to strip .git and friends on its own; Workers does not, so it is explicit.
+.git
+.git/**
+.github
+.github/**
+.nojekyll
+README.md
+CONTRIBUTING.md
+renovate.json
+wrangler.jsonc
+.assetsignore
