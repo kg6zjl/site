@@ -234,6 +234,18 @@
           against production's network rules rather than a hosted runner's.</td>
       </tr>
       <tr>
+        <td>Runner toolcache warmer</td>
+        <td>A cache of the nine release binaries CI keeps needing, filled on each node outside any
+          job. A runner exists for one job and is thrown away, so without this every run re-downloads
+          its tools, and GitHub's release CDN delivers about 300KB/s from here: two minutes for
+          trufflehog, two and a half for kyverno, six for prometheus. It has to be a DaemonSet rather
+          than a runner init container, because a download started inside a job gets killed by the
+          next rollout and then every job pays for it again. Each binary carries a version stamp, so
+          a bumped pin re-warms instead of the cache quietly serving the old release, and nothing
+          lands in the cache until its checksum verifies. A cache you cannot trust to match the pin
+          is worse than no cache at all.</td>
+      </tr>
+      <tr>
         <td>Renovate</td>
         <td>Opens a pull request when a newer version exists, hourly, one version at a time. Small
           safe bumps — patch, digest, pin — it merges itself, through its own App bypass rather
