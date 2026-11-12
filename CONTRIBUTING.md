@@ -28,7 +28,7 @@ Treat a leak as a credential rotation, not a typo.
 
 ## Where this came from
 
-Content is authored in the private `kg6zjl/clusters` repo under `site/`, along with the Mermaid
+Content is authored in the private `kg6zjl/clusters` repo under `site-source/`, along with the Mermaid
 sources and the diagram renderer in `documentation/site-diagrams/`. The rendered SVGs in
 `assets/img/` are committed here because they ARE the site; their sources and tooling deliberately
 stay private, because that tooling is full of internal hostnames.
@@ -37,12 +37,10 @@ To change the site, edit it in `clusters` and run `task site:sync` from there. D
 
 ## Deploying
 
-`.github/workflows/pages.yaml` uploads the repo as a Pages artifact and deploys it **on pushes to
-main only**. A pull request cannot trigger a publish.
+Cloudflare **Workers Builds** deploys this repository to the `site` Worker on pushes to `main`.
+A pull request gets a preview deployment via `wrangler preview` (configured in `wrangler.jsonc`).
 
-The site answers on `kg6zjl.github.io/site`. `stevearnett.com` is a Cloudflare redirect rule pointing
-here, not a custom domain - there is deliberately no `CNAME` in this repository, because claiming a
-custom domain would take the hostname over from that redirect and stop `kg6zjl.github.io/site`
-serving.
+The site answers on `stevearnett.com` (Cloudflare Workers, custom domain). There is no GitHub Pages
+deployment and no `CNAME` in this repository.
 
-This workflow runs on GitHub-hosted runners, deliberately. Nothing here needs the cluster.
+This runs on Cloudflare's infrastructure, not GitHub-hosted runners.

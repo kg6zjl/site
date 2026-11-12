@@ -31,17 +31,11 @@ the file. Everything else on the site works with no JavaScript at all.
 
 ## Deploying
 
-`.github/workflows/pages.yaml` uploads the repository as a Pages artifact and deploys it **on pushes
-to `main` only**. A pull request cannot trigger a publish.
+Cloudflare **Workers Builds** deploys this repository to the `site` Worker on pushes to `main`.
+A pull request gets a preview deployment via `wrangler preview` (configured in `wrangler.jsonc`).
 
-The site answers on `kg6zjl.github.io/site`. `stevearnett.com` is a Cloudflare redirect rule pointing
-here, not a custom domain - there is deliberately no `CNAME` in this repository, because claiming a
-custom domain would take the hostname over from that redirect and stop `kg6zjl.github.io/site`
-serving.
-
-**One-time repository setting (a human, not the agent):** *Settings → Pages → Build and deployment →
-Source* must be **GitHub Actions**. The API cannot set that from an agent's token, and until it is set
-the deploy job fails with a clear error.
+The site answers on `stevearnett.com` (Cloudflare Workers, custom domain). There is no GitHub Pages
+deployment and no `CNAME` in this repository.
 
 ## Editing
 
@@ -66,8 +60,9 @@ rendered at publish time — that is what keeps this a no-build directory — an
 it is reviewed as a diff and cannot quietly drift away from the paragraph beside it.
 
 Sources, the renderer image, and the render task live in `documentation/site-diagrams/` of the private
-`kg6zjl/clusters` repo. They are deliberately **kept out of this repository**, because Pages publishes
-every file here and the tooling is full of the registry hostname. After editing a `.mmd`:
+`kg6zjl/clusters` repo. They are deliberately **kept out of this repository**, because Workers
+Builds publishes every file here and the tooling is full of the registry hostname. After editing a
+`.mmd`:
 
 ```bash
 cd ../documentation/site-diagrams && task diagrams
