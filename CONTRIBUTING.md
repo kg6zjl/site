@@ -1,4 +1,4 @@
-# This is the public site — keep it public
+# This is the public site -- keep it public
 
 **Every change here lands on the internet the moment it merges.** `clusters` is private; this repo is
 not, and that is deliberate. The site is the one artifact written *for* strangers.
@@ -7,14 +7,14 @@ not, and that is deliberate. The site is the one artifact written *for* stranger
 
 `task check:public` in the private `kg6zjl/clusters` repo scans this content for real addresses,
 hostnames, domains and email addresses. A port on its own says nothing without a host, so the gate
-does not try to catch bare port numbers. Describe the category instead — "the API
+does not try to catch bare port numbers. Describe the category instead -- "the API
 server is a host process", "a shared file share on a NAS", "a machine called a think-centre".
 
 **Product names are fine.** Public OSS and public services; naming them is most of what makes the
 site useful to somebody building the same thing.
 
 CI runs the same scan on every pull request here, so a hostname cannot reach the public repo even if
-the local run is skipped. A failing check is the whole point — do not widen the pattern to make it
+the local run is skipped. A failing check is the whole point -- do not widen the pattern to make it
 pass. Add the redaction at the source.
 
 ## What a grep cannot see

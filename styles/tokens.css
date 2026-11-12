@@ -13,7 +13,6 @@
   --ink-soft: #afaeac;      /* Ash Gray — secondary text */
   --ink-dim: #868584;       /* Stone Gray — muted, captions */
   --ink-muted: #666469;     /* Purple-Tint Gray — links */
-  --ink-inverse: #0a0a0a;   /* For skip link on accent bg */
 
   /* Warm surfaces */
   --surface: #353534;       /* Earth Gray — buttons, cards */
@@ -28,15 +27,6 @@
   --warn: #d97757;          /* Amber — warnings */
   --error: #d95757;         /* Red — errors */
   --success: #6aa85f;       /* Green — success */
-
-  /* Accent — warm amber for interactive elements */
-  --accent: #d97757;
-  --accent-dim: #2a1a15;
-
-  /* Code block */
-  --code-bg: #0e0e0e;
-  --code-border: #2a2a29;
-  --code-text: #e8e6e3;
 
   /* ===== TYPOGRAPHY ===== */
   /* System font stack — zero load, native everywhere */
@@ -102,7 +92,6 @@
   --z-modal: 300;
   --z-toast: 400;
   --z-lightbox: 500;
-  --z-tooltip: 600;
 
   /* ===== CONTENT MEASURES ===== */
   --measure-narrow: 36rem;   /* 576px — narrow figures */
@@ -122,4 +111,3 @@
   --mermaid-line: var(--line);
   --mermaid-font: var(--font-sans);
   --mermaid-font-mono: var(--font-mono);
-}

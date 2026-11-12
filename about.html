@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v5.18.2"><title>About</title><meta name="description" content="Brief bio, GitHub, LinkedIn, RSS"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="kg6zjl/site"><meta property="og:title" content="About"><meta property="og:description" content="Brief bio, GitHub, LinkedIn, RSS"><meta property="og:url" content="https://stevearnett.com/about/"><meta property="og:image" content="https://stevearnett.com/assets/img/og-default.png"><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="About"><meta name="twitter:description" content="Brief bio, GitHub, LinkedIn, RSS"><meta name="twitter:image" content="https://stevearnett.com/assets/img/og-default.png"><!-- Canonical -->  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="canonical" href="https://stevearnett.com/about/"><!-- Fonts: JetBrains Mono for code (self-hosted or CDN) --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"><!-- Global styles (tokens + base) --><link rel="stylesheet" href="styles/global.css"><style>.page-grid{display:grid;grid-template-columns:1fr;gap:var(--space-8);max-width:calc(var(--measure-wide) + 20rem);margin:0 auto;padding:0 var(--space-4) var(--space-16)}@media(min-width:900px){.page-grid{grid-template-columns:1fr 16rem;grid-template-areas:"content sidebar" "content sidebar"}.page-content{grid-area:content}.page-sidebar{grid-area:sidebar}}.page-content{min-width:0}.hero{margin-top:var(--space-4)}.hero>*:first-child{margin-top:0}
+</style></head> <body> <!-- Skip to main content --> <a href="#main-content" class="skip-link">Skip to main content</a> <!-- Lightbox dialog (native, no framework) --> <dialog class="lightbox" id="lightbox" aria-label="Screenshot, full size"> <img alt=""> <button class="lightbox-close" type="button">Close</button> </dialog>    <nav class="topnav" role="navigation" aria-label="Main navigation">
+    <ul>
+      <li><a href="index.html"> Why </a></li>
+      <li><a href="guardrails.html"> Guardrails </a></li>
+      <li><a href="stack.html"> Stack </a></li>
+      <li><a href="workflow.html"> Workflow </a></li>
+      <li><a href="monitoring.html"> Monitoring </a></li>
+      <li><a href="alerting.html"> Alerting </a></li>
+      <li><a href="about.html" aria-current="page"> About </a></li>
+      <li><a href="reviews.html"> Reviews </a></li>
+    </ul>
+  </nav> <main id="main-content" role="main"> <header class="page-head"> <div class="wrap">  <h1>About</h1>  </div> </header> <div class="page-grid"> <div class="page-content wrap"> <nav class="breadcrumb" aria-label="Breadcrumb" role="navigation"> <a href="index.html">Why</a>   </nav> <article>  <div class="prose"><p>
+I build infrastructure that runs on GitOps principles: everything in git, everything reviewed,
+everything reversible. The cluster is the test environment and the production environment
+simultaneously — there is no staging environment because the guardrails make the cluster its own
+staging.
+</p>
+
+<h2>Where to find me</h2>
+<ul>
+<li><a href="https://github.com/kg6zjl">GitHub</a> — the clusters repo, the skills repo, this site</li>
+<li><a href="https://linkedin.com/in/steve-arnett">LinkedIn</a> — professional profile</li>
+<li><a href="/feed.xml">RSS</a> — posts from this site</li>
+</ul>
+
+<h2>What I write about</h2>
+<ul>
+<li>GitOps with Flux</li>
+<li>Kubernetes admission policies (Kyverno)</li>
+<li>AI agents with guardrails</li>
+<li>Home lab Kubernetes on MicroK8s</li>
+<li>Cost-aware alerting</li>
+<li>Observability that doesn't spam</li>
+</ul>
+
+<h2>The site</h2>
+<p>
+This site is built with <a href="https://astro.build">Astro</a> (static), deployed to
+<a href="https://pages.cloudflare.com">Cloudflare Pages</a> via the <code>site</code> Worker.
+Source is the <code>site/</code> directory of the <a href="https://github.com/kg6zjl-personal/clusters">clusters repo</a>.
+Every change is a pull request, every merge is a deploy.
+</p>
+
+<footer class="site-footer">
+<p>Notes from a GitOps home cluster. Source is the <code>site/</code> directory of the clusters repository. <a href="guardrails.html">Guardrails →</a></p>
+</footer></div>  </article> </div> <aside class="page-sidebar"> <aside class="sidebar-nav" role="complementary" aria-label="On this page"> <nav> <ul> <li> <a href="#why"> Why </a> </li><li> <a href="#guardrails"> Guardrails </a> </li><li> <a href="#monitoring"> Monitoring </a> </li><li> <a href="#alerting"> Alerting </a> </li><li> <a href="#workflow"> The Loop </a> </li><li> <a href="#stack"> The Stack </a> </li> </ul> </nav> </aside> </aside> </div> </main> <footer role="contentinfo"> <div class="wrap"> <p>    Notes from a GitOps home cluster. </p> <p class="small" style="margin-top: var(--space-3);">
+Source is the <code>site/</code> directory of the cluster repository.
+</p> </div> </footer>  <!-- Lightbox script (vanilla JS, progressive enhancement) --> <script src="scripts/lightbox.js"></script> </body> </html>
