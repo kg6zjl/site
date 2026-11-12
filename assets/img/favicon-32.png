@@ -1,5 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#0a0a0a"/>
-  <path d="M8 20 L16 12 L24 20" stroke="#afaeac" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="16" cy="20" r="3" fill="#afaeac"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#0a0a0a"/>
+  
+  <!-- Outer ring -->
+  <circle cx="32" cy="32" r="28" stroke="#d97757" stroke-width="2" fill="none" opacity="0.3"/>
+  
+  <!-- Git branch lines -->
+  <path d="M32 10 C32 10 20 22 18 28 C16 34 14 42 32 42 C50 42 48 34 46 28 C44 22 32 10 32 10" 
+        stroke="#d97757" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Center node -->
+  <circle cx="32" cy="32" r="6" fill="#d97757"/>
+  
+  <!-- Three dots representing the three nodes -->
+  <circle cx="32" cy="18" r="3" fill="#afaeac" opacity="0.7"/>
+  <circle cx="18" cy="38" r="3" fill="#afaeac" opacity="0.7"/>
+  <circle cx="46" cy="38" r="3" fill="#afaeac" opacity="0.7"/>
+  
+  <!-- Connection lines -->
+  <path d="M32 21 L32 28 M32 35 L22 36 M32 35 L42 36" 
+        stroke="#afaeac" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
 </svg>

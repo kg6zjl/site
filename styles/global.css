@@ -32,6 +32,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================================================================
@@ -49,7 +52,6 @@ a {
 a:hover { color: var(--ink); }
 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-/* Nav links and other non-underlined links use .link-plain */
 .link-plain { text-decoration: none; }
 .link-plain:hover { text-decoration: underline; }
 
@@ -124,8 +126,10 @@ li:last-child { margin-bottom: 0; }
 
 blockquote {
   margin: var(--space-6) 0;
-  padding: var(--space-1) 0 var(--space-1) var(--space-4);
-  border-left: 2px solid var(--line);
+  padding: var(--space-4) var(--space-5);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-soft);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 blockquote p { margin: 0; color: var(--ink-soft); }
@@ -150,6 +154,13 @@ code {
   border: 1px solid var(--line);
 }
 
+pre code {
+  font-size: 1em;
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+
 /* ==========================================================================
    CODE — Block (pre)
    ========================================================================== */
@@ -164,13 +175,6 @@ pre {
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   color: var(--code-text);
-}
-
-pre code {
-  font-size: 1em;
-  background: transparent;
-  padding: 0;
-  border: 0;
 }
 
 /* ==========================================================================
@@ -222,7 +226,7 @@ figure img,
 figure svg {
   display: block;
   max-width: 100%;
-  max-height: 30rem;
+  max-height: 60vh;
   width: auto;
   height: auto;
   margin: 0 auto;
@@ -253,7 +257,9 @@ a.zoom {
   cursor: zoom-in;
   border-radius: var(--radius-md);
   overflow: hidden;
+  transition: transform var(--transition-fast);
 }
+a.zoom:hover { transform: scale(1.01); }
 a.zoom:focus-visible { outline-offset: 4px; }
 
 /* ==========================================================================
@@ -300,8 +306,10 @@ a.zoom:focus-visible { outline-offset: 4px; }
 
 .note {
   margin: var(--space-6) 0;
-  padding: 0 0 0 var(--space-4);
-  border-left: 2px solid var(--accent);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
 }
 
 .note p:last-child { margin-bottom: 0; }
@@ -339,12 +347,13 @@ a.zoom:focus-visible { outline-offset: 4px; }
   background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .card:hover {
-  border-color: var(--line-soft);
-  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .card h3 { margin: 0 0 var(--space-2); font-size: var(--text-lg); }
@@ -356,9 +365,10 @@ a.zoom:focus-visible { outline-offset: 4px; }
 
 footer {
   border-top: 1px solid var(--line);
-  padding: var(--space-6) 0 var(--space-10);
+  padding: var(--space-8) 0 var(--space-10);
   font-size: var(--text-sm);
   color: var(--ink-dim);
+  margin-top: auto;
 }
 
 footer .wrap { padding: 0 var(--space-4); }
@@ -376,7 +386,10 @@ footer a:hover { color: var(--accent); }
   padding: 0 var(--space-4);
 }
 
-main { padding: var(--space-10) var(--space-4) var(--space-16); }
+main { 
+  flex: 1;
+  padding: var(--space-10) var(--space-4) var(--space-16); 
+}
 
 .page-head {
   max-width: var(--measure-wide);
@@ -408,7 +421,7 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
 
 .lightbox[open] { display: grid; place-items: center; }
 
-.lightbox::backdrop { background: rgba(4, 7, 10, 0.92); }
+.lightbox::backdrop { background: rgba(4, 7, 10, 0.95); }
 
 .lightbox img {
   max-width: 100%;
@@ -432,10 +445,10 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
   font-size: var(--text-xs);
   cursor: pointer;
   z-index: calc(var(--z-modal) + 1);
-  transition: color var(--transition-fast), border-color var(--transition-fast);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 
-.lightbox-close:hover { color: var(--ink); border-color: var(--line-soft); }
+.lightbox-close:hover { color: var(--ink); border-color: var(--accent); background: var(--bg-raised); }
 
 /* ==========================================================================
    TOP NAVIGATION
@@ -446,8 +459,8 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
   top: 0;
   z-index: var(--z-sticky);
   border-bottom: 1px solid var(--line);
-  background: var(--bg-soft);
-  backdrop-filter: blur(8px);
+  background: rgba(var(--bg-soft-rgb), 0.95);
+  backdrop-filter: blur(12px);
 }
 
 .topnav ul {
@@ -457,20 +470,22 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
   max-width: var(--measure-wide);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
+  justify-content: center;
 }
 
 .topnav a {
   color: var(--ink-soft);
   text-decoration: none;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   transition: color var(--transition-fast), background var(--transition-fast);
+  white-space: nowrap;
 }
 
 .topnav a:hover { color: var(--ink); background: var(--bg-raised); }
-.topnav a[aria-current="page"] { color: var(--accent); }
+.topnav a[aria-current="page"] { color: var(--accent); background: var(--accent-dim); }
 
 /* ==========================================================================
    BREADCRUMB
@@ -525,8 +540,17 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
    RESPONSIVE
    ========================================================================== */
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .sidebar-nav { display: none; }
+  .page-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 600px) {
+  .topnav ul { gap: var(--space-1) var(--space-2); }
+  .topnav a { padding: var(--space-1) var(--space-2); font-size: var(--text-xs); }
+  h1 { font-size: var(--text-2xl); }
+  h2 { font-size: var(--text-xl); }
+  main { padding: var(--space-6) var(--space-3) var(--space-10); }
 }
 
 /* ==========================================================================
@@ -545,7 +569,6 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
   border: 0;
 }
 
-/* Skip link */
 .skip-link {
   position: absolute;
   top: -100%;
@@ -559,3 +582,49 @@ main { padding: var(--space-10) var(--space-4) var(--space-16); }
   transition: top var(--transition-fast);
 }
 .skip-link:focus { top: var(--space-4); }
+
+/* ==========================================================================
+   REVIEWS SECTION
+   ========================================================================== */
+
+.reviews {
+  margin-top: var(--space-16);
+  padding-top: var(--space-10);
+  border-top: 1px solid var(--line);
+}
+
+.reviews h2 {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.reviews-grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 700px) {
+  .reviews-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1000px) {
+  .reviews-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.review-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.review-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.review-card blockquote { margin: 0; padding: 0; border: none; background: none; }
+.review-card blockquote p { margin: 0 0 var(--space-3); font-size: var(--text-base); line-height: var(--leading-relaxed); }
+.review-card footer { font-size: var(--text-sm); color: var(--accent); font-weight: var(--weight-medium); }
