@@ -9,6 +9,16 @@ Dark only, by request. One stylesheet, one accent, system fonts.
 .
   index.html        why this exists, what the agent has done, what it costs, what's still broken
   guardrails.html   permissions, secrets, networking, admission, patching, disposable state
+  1-why-guardrails.html  why guardrails matter
+  2-five-controls.html   five controls
+  3-rbac.html       permissions (RBAC)
+  4-kyverno.html    kyverno identity policies
+  5-secrets.html    secrets management
+  6-network.html    network policies
+  7-runtime.html    runtime behaviour
+  8-change-flow.html    change flow
+  9-kured-renovate.html  auto-updates (Kured/Renovate)
+  10-disposable.html    disposable pod
   monitoring.html   what's measured and why that list is short
   alerting.html     the pipeline, the receivers, the channels, and what's not an alert
   workflow.html     how a change actually reaches the cluster
