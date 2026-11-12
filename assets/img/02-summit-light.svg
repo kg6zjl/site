@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="summitGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d9488;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f766e;stop-opacity:1" />
+    </linearGradient>
+    <filter id="summitGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <path d="M8 56 L26 18 L32 8 L38 18 L56 56 Z" 
+        fill="url(#summitGrad)" opacity="0.95" filter="url(#summitGlow)"/>
+  
+  <path d="M32 8 L26 22 L32 28" fill="none" stroke="#0d9488" stroke-width="1.5" opacity="0.6"/>
+  <path d="M32 8 L38 22 L32 28" fill="none" stroke="#0d9488" stroke-width="1.5" opacity="0.4"/>
+  
+  <circle cx="32" cy="8" r="2.5" fill="#0d9488" opacity="1">
+    <animate attributeName="r" values="2.5;3.5;2.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <line x1="16" y1="56" x2="48" y2="56" stroke="#0d9488" stroke-width="1.5" opacity="0.2"/>
+</svg>
