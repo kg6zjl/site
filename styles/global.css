@@ -617,8 +617,7 @@ tr:last-child td { border-bottom: none; }
   margin-top: var(--space-10);
 }
 
-@media (min-width: 640px) { .reviews-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .reviews-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 768px) { .reviews-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .review-card {
   background: var(--bg-card);
