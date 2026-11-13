@@ -6,6 +6,8 @@ I decide something should be different and open a pull request. Reviewed, merged
 Renovate checks hourly and opens a pull request when a newer version exists. The bump is a diff like any other; the pieces that can bite wait for me.
 </p> </div> <div class="callout"> <p class="callout-title">The agent received a wake and opened a PR</p> <p>
 An allow-listed alert — or a person — wakes the agent. It reads the cluster, and if a manifest change is the fix, it opens a pull request and stops. The merge waits for whoever is awake.
+</p> </div> <div class="callout"> <p class="callout-title">A machine needs patching</p> <p>
+Ansible playbooks in the same repository. Security updates install unattended, and the node reboots to apply them on a staggered timetable — one host at a time.
 </p> </div> </div> </section> <section class="section" id="hosts"> <div class="content"> <h2>The hosts: Ansible</h2> <p class="lead">
 Node configuration is Ansible playbooks in the same repository as everything else: base packages, kernel settings, the pinned Kubernetes snap channel, the kubelet's node address, the mounts, the accounts.
 </p> <p>
