@@ -22,7 +22,6 @@ Dark only, by request. One stylesheet, one accent, system fonts.
   alerting.html     the pipeline, the receivers, the channels, and what's not an alert
   workflow.html     how a change actually reaches the cluster
   stack.html        every tool, and why that one rather than another
-  about.html        about the author
   reviews.html      what major AI models said about this setup
   assets/style.css  one stylesheet, dark only
   assets/lightbox.js  one script: click a figure to open it full size, click away to close
