@@ -683,6 +683,22 @@ tr:last-child td { border-bottom: none; }
   .page-nav { flex-direction: column; gap: var(--space-4); }
   .page-nav-link { width: 100%; justify-content: center; }
   .nav-primary { display: none; }
+  /* the toggle adds .open; without a rule for it the hamburger did nothing */
+  .nav-primary.open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    gap: 0;
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+  }
+  .nav-primary.open a { width: 100%; }
   .sidebar-nav { display: none; }
   .reviews-grid { grid-template-columns: 1fr; }
 }
