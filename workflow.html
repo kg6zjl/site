@@ -1,171 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The loop: a pull request is the only write path</title>
-<meta name="description" content="How a change reaches a GitOps cluster: branch, commit, required checks on runner pods in the same cluster, human merge, Flux reconcile. Plus Renovate proposing version bumps and an agent that may never merge its own infrastructure changes.">
-<link rel="stylesheet" href="assets/style.css">
-</head>
-<body>
-<nav class="topnav">
-  <ul>
-    <li><a href="index.html">Why</a></li>
-    <li><a href="guardrails.html">Guardrails</a></li>
-    <li><a href="monitoring.html">Monitoring</a></li>
-    <li><a href="alerting.html">Alerting</a></li>
-    <li><a href="workflow.html" aria-current="page">The loop</a></li>
-    <li><a href="stack.html">The stack</a></li>
-  </ul>
-</nav>
+<!DOCTYPE html><html lang="en"> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v5.18.2"><title>The loop: a pull request is the only write path</title><meta name="description" content="How a change reaches a GitOps cluster: branch, commit, required checks, local runner pods in the same cluster, human merge, Flux reconcile. Plus Renovate proposing version bumps and an agent that may never merge its own infrastructure changes."><link rel="canonical" href="https://stevearnett.com/workflow/"><meta property="og:type" content="website"><meta property="og:site_name" content="Steve Arnett"><meta property="og:title" content="The loop: a pull request is the only write path"><meta property="og:description" content="How a change reaches a GitOps cluster: branch, commit, required checks, local runner pods in the same cluster, human merge, Flux reconcile. Plus Renovate proposing version bumps and an agent that may never merge its own infrastructure changes."><meta property="og:url" content="https://stevearnett.com/workflow/"><meta property="og:image" content="https://stevearnett.com/assets/img/og-default.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="The loop: a pull request is the only write path"><meta name="twitter:description" content="How a change reaches a GitOps cluster: branch, commit, required checks, local runner pods in the same cluster, human merge, Flux reconcile. Plus Renovate proposing version bumps and an agent that may never merge its own infrastructure changes."><meta name="twitter:image" content="https://stevearnett.com/assets/img/og-default.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles/global.css"><link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg"></head> <body> <a href="#main-content" class="skip-link">Skip to main content</a> <header class="site-header" role="banner"> <div class="wrap"> <a href="index.html" class="site-brand" aria-label="Steve Arnett — Home"> <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"> <rect width="64" height="64" rx="12" fill="#0a0a0a"></rect> <circle cx="32" cy="32" r="28" stroke="#e87d3e" stroke-width="2" fill="none" opacity="0.3"></circle> <path d="M32 10 C32 10 20 22 18 28 C16 34 14 42 32 42 C50 42 48 34 46 28 C44 22 32 10 32 10" stroke="#e87d3e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path> <circle cx="32" cy="32" r="6" fill="#e87d3e"></circle> <circle cx="32" cy="18" r="3" fill="#a1a1aa" opacity="0.7"></circle> <circle cx="18" cy="38" r="3" fill="#a1a1aa" opacity="0.7"></circle> <circle cx="46" cy="38" r="3" fill="#a1a1aa" opacity="0.7"></circle> <path d="M32 21 L32 28 M32 35 L22 36 M32 35 L42 36" stroke="#a1a1aa" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"></path> </svg> <span>Steve Arnett</span> </a> <nav class="nav-primary" role="navigation" aria-label="Main navigation"> <a href="index.html">Why</a> <a href="1-why-guardrails.html">Guardrails</a> <a href="stack.html">Stack</a> <a href="workflow.html" aria-current="page">Workflow</a> <a href="alerting.html">Alerting</a> <a href="reviews.html">Reviews</a> </nav> <button class="mobile-menu-btn" aria-label="Toggle navigation" aria-expanded="false"> <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg> </button> </div> </header> <main id="main-content" role="main">  <article class="page"> <header class="page-header section"> <div class="wrap"> <nav class="breadcrumb" aria-label="Breadcrumb"> <a href="index.html">Home</a> <span class="breadcrumb-sep" aria-hidden="true">/</span> <span class="breadcrumb-current">The loop: a pull request is the only write path</span> </nav> <h1 class="section-title">The loop: a pull request is the only write path</h1> <p class="section-desc">How a change reaches a GitOps cluster: branch, commit, required checks, local runner pods in the same cluster, human merge, Flux reconcile. Plus Renovate proposing version bumps and an agent that may never merge its own infrastructure changes.</p> </div> </header> <div class="page-grid section"> <div class="page-content wrap">  <section class="section" id="loop"> <div class="content"> <h2>The loop</h2> <p class="lead">
+Flux watches the repository, renders the manifests and applies them. Each top-level path is one reconciliation unit with its own interval and health checks. Failure is alerted on the outcome — still not ready after fifteen minutes — rather than on every attempt, because a controller that retries is working, not broken.
+</p> <p>
+The runners that test the repository are pods in the cluster the repository describes, spawned by the Actions Runner Controller and discarded after the job. A bad change can break the thing that validates the next change. The pipeline is tested against reality, not a hosted runner with different network rules than production.
+</p> </div> </section> <section class="section" id="split"> <div class="content"> <h2>Who may merge what</h2> <p class="lead">
+The agent can open pull requests anywhere it has access. It may merge its <em>own</em> skills repository, because that's its own knowledge and reviewing every line of my own notes would grind the loop to a halt. It may not merge the cluster repository. That's mine.
+</p> <p>
+Identity and authority are the two things that decide whether an agent's action is
+accountable — who performed it, and whether they were allowed to.
+</p> <p>
+It's also not my account doing the pushing. Its identity is its own app installation, so the author and the reviewer are genuinely different identities, and the commit history says which one did what. Before that change, "the agent opened this" and "I opened this" were indistinguishable.
+</p> <div class="callout"> <p class="callout-title">Why the split matters more than the tooling</p> <p>
+An agent that can merge its own infrastructure changes is an agent that can authorise its own widening. The one thing it must never be able to do is approve the change that gives it more room. That's why the admission policies on its identity exist as well as the merge rule: two independent ways of saying no.
+</p> </div> <div class="callout" style="margin-top: var(--space-6);"> <p class="callout-title">The agent's pull request</p> <p>
+A different identity from the reviewer. That single detail is what makes the commit history evidence rather than a story.
+</p> </div> </div> </section> <section class="section" id="unattended"> <div class="content"> <h2>The unattended version of the loop</h2> <p class="lead">
+When an alert wakes it, the loop is: read the alert, look at the resources and logs involved, answer in the notification channel, and — if a manifest change is the fix — open a pull request and stop.
+</p> <p>
+It runs with exactly the same access as any other session, so the worst an unattended run can do is investigate and talk. The merge waits for the human who was asleep.
+</p> <p>
+The prompt says so, and the branch rules say so too: the agent is not the code owner, so it cannot supply the approval its own pull request needs. A rule the model can be talked out of is not a control, and neither is a rule the credential could ignore.
+</p> </div> </section> <section class="section" id="skills"> <div class="content"> <h2>Its knowledge is versioned too</h2> <p class="lead">
+The agent doesn't carry a personality file it was born with. It loads task-specific skills — how to triage a stuck pod, how the alerting tree is shaped, how to publish this site — from files in a repository, on demand.
+</p> <p>
+Each is a short document with the actual commands and the mistakes that cost time. When a task teaches it something, it updates the skill and commits that, in the same session. That's where most of the lessons on <a href="index.html">Why</a> got there.
+</p> </div> </section> <section class="section" id="versions"> <div class="content"> <h2>The versions</h2> <p class="lead">
+Nothing in the cluster floats on <code>latest</code>. Chart versions, image tags, GitHub Action versions and the CLI tools the pipeline pins are all pinned in the repository, and Renovate checks hourly for newer ones and opens a pull request when it finds one.
+</p> <p>
+Patch, digest and pin bumps Renovate merges itself, through its own App bypass rather than GitHub's platform auto-merge, which still wants a human review. A minor, and the control-plane pieces — Flux, Longhorn, the media chart — wait for me. So a version still changes the way everything else changes: the checks run against the new version first, and the things that can bite arrive as a to-do list rather than as a surprise.
+</p> <div class="callout"> <p class="callout-title">Why Renovate and not dependabot</p> <p>
+It understands Helm values and Kustomize overlays, which is most of what this repository is, and it can be told to hold a release back for a few days before proposing it. Waiting a week before proposing a two-year-old tag is exactly backwards; waiting a week before proposing yesterday's release is the point.
+</p> </div> <h3>Renovate groups and automerge policy</h3> <div class="table-wrapper"> <table> <thead> <tr><th>Group</th><th>Policy</th></tr> </thead> <tbody> <tr><td>patch pin and digest dependencies</td><td>automerge (App bypass)</td></tr> <tr><td>minor dependencies</td><td>manual (dashboard approval)</td></tr> <tr><td>flux control plane</td><td>manual (dashboard approval)</td></tr> <tr><td>jellyfin chart</td><td>manual (dashboard approval)</td></tr> <tr><td>longhorn</td><td>manual (dashboard approval)</td></tr> <tr><td>spegel</td><td>manual (dashboard approval)</td></tr> </tbody> </table> </div> <p style="margin-top: var(--space-4);">
+CI gates: Renovate CI must pass, kubeconform validates HelmRelease values. Minor bumps wait for explicit dashboard approval. Control-plane pieces (Flux, Longhorn, media charts) wait for me.
+</p> </div> </section> <section class="section" id="kured"> <div class="content"> <h2>Kured (node reboots)</h2> <p class="lead">
+Kured watches for the reboot-required sentinel and drains one node at a time before restarting it. The hosts update themselves the same way: security updates install unattended, and a machine reboots to apply them on a staggered timetable — one at a time.
+</p> <p>
+A Discord webhook announces when a node reboots (via the <code>kured-notify</code> secret).
+</p> </div> </section>  <nav class="page-nav" aria-label="Page navigation"> <a href="stack.html" class="page-nav-link page-nav-prev"> <span class="page-nav-arrow">←</span> <span class="page-nav-label">The Stack</span> </a> <a href="alerting.html" class="page-nav-link page-nav-next"> <span class="page-nav-label">Alerting</span> <span class="page-nav-arrow">→</span> </a>  </nav> </div> <aside class="page-sidebar" aria-label="On this page"> <nav class="sidebar-nav"> <h2 class="sidebar-nav-title">On this page</h2> <ul class="sidebar-nav-list"> <li><a href="#loop" class="sidebar-nav-link">The loop</a></li> <li><a href="#split" class="sidebar-nav-link">Who may merge what</a></li> <li><a href="#unattended" class="sidebar-nav-link">The unattended loop</a></li> <li><a href="#skills" class="sidebar-nav-link">Its knowledge is versioned</a></li> <li><a href="#versions" class="sidebar-nav-link">The versions</a></li> <li><a href="#kured" class="sidebar-nav-link">Kured (node reboots)</a></li> </ul> </nav> </aside> </div> </article>  </main> <footer class="site-footer" role="contentinfo"> <div class="wrap"> <nav class="footer-links" aria-label="Footer"> <a href="https://github.com/kg6zjl">GitHub</a> <a href="https://www.linkedin.com/in/starnett/">LinkedIn</a> </nav> </div> </footer> <dialog class="lightbox" id="lightbox" aria-label="Image preview" role="dialog" aria-modal="true"> <img src="" alt=""> <button class="lightbox-close" aria-label="Close"> <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> </button> </dialog> <script>
+    // Lightbox functionality
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = lightbox.querySelector('img');
+    const lightboxClose = lightbox.querySelector('.lightbox-close');
 
-<header class="page-head">
-  <p class="eyebrow">The loop</p>
-  <h1>A pull request is the only way anything changes</h1>
-  <p class="lede">
-    Including for me. There's no apply, no patch, no "just this once" — because the moment there is,
-    the rest of this stops being true.
-  </p>
-</header>
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('a.zoom');
+      if (trigger) {
+        e.preventDefault();
+        const img = trigger.querySelector('img');
+        lightboxImg.src = trigger.href;
+        lightboxImg.alt = img?.alt || '';
+        lightbox.classList.add('open');
+        lightboxClose.focus();
+      }
+    });
 
-<main>
-
-<section aria-labelledby="loop">
-  <h2 id="loop">The loop</h2>
-
-  <figure class="shot">
-    <a class="zoom" href="assets/img/loop.svg">
-      <img src="assets/img/loop.svg" alt="Flow diagram of the only write path. Three authors open a pull request on the same queue: me, Hermes and Renovate. Required checks run: a failure goes back to the pull request along a red arrow and a pass goes forward along a green one to a gate asking who merges, which only a human can pass. The merge goes to main, Flux reconciles, and the result is a new state. An amber dashed arrow returns from Flux to me when a reconcile fails and raises an alert, so the only way out is another pull request through the same gate." width="518" height="846" loading="lazy">
-    </a>
-    <figcaption>
-      <strong>The whole loop.</strong> The dashed path is the design: the agent's pull request lands in
-      the same queue as mine, so "it wrote the fix" and "a human approved the fix" stay two separate
-      events.
-    </figcaption>
-  </figure>
-
-  <p>
-    Flux watches the repository, renders the manifests and applies them. Each top-level path is one
-    reconciliation unit with its own interval and health checks. Failure is alerted on the outcome —
-    still not ready after fifteen minutes — rather than on every attempt, because a controller that
-    retries is working, not broken.
-  </p>
-  <p>
-    The runners that test the repository are pods in the cluster the repository describes, spawned by
-    the Actions Runner Controller and discarded after the job. A bad change can break the thing that
-    validates the next change. The pipeline is tested against reality, not a hosted runner with
-    different network rules than production.
-  </p>
-</section>
-
-<section aria-labelledby="split">
-  <h2 id="split">Who may merge what</h2>
-  <p>
-    The agent can open pull requests anywhere it has access. It may merge its <em>own</em> skills
-    repository, because that's its own knowledge and reviewing every line of my own notes would grind
-    the loop to a halt. It may not merge the cluster repository. That's mine.
-  </p>
-  <p>
-    It's also not my account doing the pushing. Its identity is its own app installation, so the author
-    and the reviewer are genuinely different identities, and the commit history says which one did
-    what. Before that change, "the agent opened this" and "I opened this" were indistinguishable.
-  </p>
-  <div class="note">
-    <span class="label">Why the split matters more than the tooling</span>
-    <p>
-      An agent that can merge its own infrastructure changes is an agent that can authorise its own
-      widening. The one thing it must never be able to do is approve the change that gives it more
-      room. That's why the admission policies on its identity exist as well as the merge rule: two
-      independent ways of saying no.
-    </p>
-  </div>
-
-  <figure class="shot">
-    <div class="shot-pending" role="img" aria-label="Screenshot pending: a pull request opened by the agent, showing the app identity as the author and the required checks passing.">
-      <span class="todo">Screenshot pending</span>
-      <code class="path">assets/img/shots/agent-pr.png</code>
-      <span class="hint">A pull request opened by the agent. The thing to capture is the
-        <em>author</em> — it shows the app identity, not your account — plus the checks going green
-        and the merge button being yours.</span>
-    </div>
-    <figcaption>
-      <strong>The agent's pull request.</strong> A different identity from the reviewer. That single
-      detail is what makes the commit history evidence rather than a story.
-    </figcaption>
-  </figure>
-</section>
-
-<section aria-labelledby="unattended">
-  <h2 id="unattended">The unattended version of the loop</h2>
-  <p>
-    When an alert wakes it, the loop is: read the alert, look at the resources and logs involved,
-    answer in the notification channel, and — if a manifest change is the fix — open a pull request and
-    stop. It runs with exactly the same access as any other session, so the worst an unattended run can
-    do is investigate and talk. The merge waits for the human who was asleep.
-  </p>
-  <p>
-    The prompt says so, and the branch rules say so too: the agent is not the code owner, so it
-    cannot supply the approval its own pull request needs. A rule the model can be talked out of is
-    not a control, and neither is a rule the credential could ignore.
-  </p>
-</section>
-
-<section aria-labelledby="papercuts">
-  <h2 id="papercuts">The mechanics that waste an afternoon</h2>
-  <ul>
-    <li>
-      <strong>CI filters by path.</strong> If the repository's check workflow doesn't watch the
-      directory you changed, no check attaches to your pull request and it reads as blocked forever.
-      "Wait for CI" becomes an infinite wait, and the fix is to widen the filter in its own change —
-      never to smuggle an unrelated file into the pull request to trip it.
-    </li>
-    <li>
-      <strong>A narrowly scoped token can't touch its own pipeline.</strong> An app installation that
-      can push code still can't push a workflow file without an extra permission, which is the correct
-      default and a confusing error. Sometimes the honest answer is "this one needs a human".
-    </li>
-    <li>
-      <strong>One risk per command.</strong> Bundling several checks into one shell line trains
-      whoever is reading to approve without reading. Splitting them is slower and that's the point.
-    </li>
-    <li>
-      <strong>Read the manifests, not the memory.</strong> Half the wrong statements in a document come
-      from describing what something did last month. The repository is what's true. A checkout that's
-      a week behind is a source of confident nonsense.
-    </li>
-  </ul>
-</section>
-
-<section aria-labelledby="skills">
-  <h2 id="skills">Its knowledge is versioned too</h2>
-  <p>
-    The agent doesn't carry a personality file it was born with. It loads task-specific skills — how to
-    triage a stuck pod, how the alerting tree is shaped, how to publish this site — from files in a
-    repository, on demand. Each is a short document with the actual commands and the mistakes that cost
-    time.
-  </p>
-  <p>
-    When a task teaches it something, it updates the skill and commits that, in the same session. That's
-    where most of the lessons on this site came from: something broke, the fix went in the repository,
-    and the next session starts already knowing.
-  </p>
-  <div class="note">
-    <span class="label">The diagrams on this site are written the same way</span>
-    <p>
-      Every figure here is a Mermaid source file in the repository, rendered to SVG by a pinned image.
-      Editing a diagram is editing text, reviewing it is reviewing a diff, and it cannot quietly
-      drift from what the prose says — which is the failure mode of every diagram I have ever seen
-      go stale.
-    </p>
-  </div>
-</section>
-
-</main>
-
-<footer>
-  <div class="wrap">
-    <p><a href="alerting.html">← Alerting</a> · <a href="stack.html">The stack →</a></p>
-  </div>
-</footer>
-</body>
-</html>
+    lightboxClose?.addEventListener('click', () => lightbox.classList.remove('open'));
+    lightbox?.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.classList.remove('open'); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && lightbox.classList.contains('open')) lightbox.classList.remove('open'); });
+  </script> <script>
+    // Mobile menu toggle
+    const btn = document.querySelector('.mobile-menu-btn');
+    const nav = document.querySelector('.nav-primary');
+    if (btn && nav) {
+      btn.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+    }
+  </script> </body> </html>
