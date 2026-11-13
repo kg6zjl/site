@@ -19,7 +19,6 @@ Dark only, by request. One stylesheet, one accent, system fonts.
   8-change-flow.html    change flow
   9-kured-renovate.html  auto-updates (Kured/Renovate)
   10-disposable.html    disposable pod
-  monitoring.html   what's measured and why that list is short
   alerting.html     the pipeline, the receivers, the channels, and what's not an alert
   workflow.html     how a change actually reaches the cluster
   stack.html        every tool, and why that one rather than another
